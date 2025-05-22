@@ -60,13 +60,14 @@ cargo test
 
 ## Architecture
 
-### Current (Proof of Concept)
-- ✅ **FastEmbed Integration**: Working embedding service
-- ✅ **Semantic Quality**: Validated for programming concepts
-- ✅ **Performance**: Meeting all latency targets
+### Current Implementation
+- ✅ **FastEmbed Integration**: Working embedding service with all-MiniLM-L6-v2
+- ✅ **Semantic Quality**: Validated for programming concepts  
+- ✅ **Performance**: Sub-5ms embeddings, meeting all latency targets
+- ✅ **Vector Database**: JSON-based storage with cosine similarity search
+- ✅ **Document Management**: Add, search, and persist documentation with metadata
 
-### Planned (Full Implementation)
-- 🔄 **Vector Database**: Efficient similarity search and persistence
+### Planned Features
 - 🔄 **MCP Server**: Full integration with Claude Desktop
 - 🔄 **Web Crawler**: Recursive documentation indexing
 - 🔄 **Web Interface**: Management UI for documentation curation
@@ -76,11 +77,11 @@ cargo test
 | Phase | Timeline | Features |
 |-------|----------|----------|
 | **Phase 1** | ✅ Complete | Core embedding service with quality validation |
-| **Phase 2** | Weeks 1-2 | Vector database with persistence and search |
-| **Phase 3** | Weeks 2-3 | MCP server integration and tools |
-| **Phase 4** | Weeks 3-4 | Web crawler with content extraction |
-| **Phase 5** | Week 5 | Web interface for management |
-| **Phase 6** | Week 6+ | Advanced features and optimizations |
+| **Phase 2** | ✅ Complete | Vector database with persistence and search |
+| **Phase 3** | Weeks 3-4 | MCP server integration and tools |
+| **Phase 4** | Weeks 4-5 | Web crawler with content extraction |
+| **Phase 5** | Week 6 | Web interface for management |
+| **Phase 6** | Week 7+ | Advanced features and optimizations |
 
 ## Use Cases
 
@@ -126,6 +127,49 @@ Result: Technical documentation for MCP protocol implementation
 - **Vectors**: `vectors.json` (embeddings and similarity indices)
 - **Config**: `config.json` (user preferences)
 - **Logs**: `logs/` (debug and operation logs)
+
+## Testing
+
+### Unit Tests
+Run all unit tests:
+```bash
+cargo test
+```
+
+Run tests with output:
+```bash
+cargo test -- --nocapture
+```
+
+### Integration Testing
+The main binary includes integration tests for:
+- Embedding generation and quality
+- Vector database operations
+- Semantic search functionality
+
+Run the integration test:
+```bash
+cargo run
+```
+
+### Performance Testing
+Check embedding latency:
+```bash
+RUST_LOG=debug cargo run
+```
+
+### Manual Testing
+1. **Test vector persistence**:
+   ```bash
+   cargo run
+   # Check that test_vectordb.json is created
+   cat test_vectordb.json | jq .
+   ```
+
+2. **Test search quality**:
+   - Modify the queries in `main.rs`
+   - Add your own documents
+   - Verify semantic search results
 
 ## Contributing
 
