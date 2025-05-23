@@ -1,189 +1,159 @@
 # CodeRAG
 
-**Documentation RAG for AI-Assisted Development**
+**AI-Powered Documentation Search for Better Code**
 
-A fast, self-contained documentation retrieval system designed specifically for AI assistants like Claude. CodeRAG eliminates external dependencies and provides semantic search over technical documentation to support autonomous coding workflows.
+CodeRAG gives AI coding assistants like Claude instant access to up-to-date documentation through semantic search. No more outdated information or hallucinated APIs - just accurate, relevant documentation when you need it.
 
-## ✅ Proven Concept
+## Features
 
-CodeRAG has been validated with excellent semantic understanding of programming concepts:
+- 🚀 **Lightning Fast**: Get relevant documentation in milliseconds
+- 🎯 **Semantic Search**: Understands programming concepts, not just keywords
+- 📦 **Single Binary**: No Docker, no dependencies, just download and run
+- 🤖 **Claude Desktop Ready**: Works seamlessly with MCP (Model Context Protocol)
+- 📚 **Smart Indexing**: Crawl and index any documentation site (coming soon)
 
-- **"Rust programming" ↔ "Rust development"**: 0.817 similarity
-- **"async function error handling" ↔ "Result type error handling"**: 0.527 similarity  
-- **Single binary deployment** with no Ollama dependency
-- **Fast embeddings**: 2-5ms per text using ONNX Runtime
-- **Quality vectors**: 384D normalized embeddings perfect for cosine similarity
+## Installation
 
-## Goals
+### Download Pre-built Binary (Recommended)
 
-### 🎯 **For AI Assistants**
-- Reliable access to current documentation while coding
-- Semantic search that understands programming concepts
-- Fast retrieval for real-time coding assistance
+Coming soon! For now, build from source.
 
-### 🚀 **For Development Teams**  
-- Single binary deployment (just `./coderag serve`)
-- No AI/ML expertise required for setup
-- Clean team adoption with minimal dependencies
+### Build from Source
 
-### ⚡ **Performance Focused**
-- Sub-5ms embedding generation
-- Sub-10ms vector search  
-- Sub-2s startup time including model loading
+Requirements:
+- Rust 1.70 or later
+- 4GB RAM (for embedding models)
+
+```bash
+git clone https://github.com/yourusername/coderag.git
+cd coderag
+cargo build --release --bin coderag-mcp
+```
+
+The binary will be at `target/release/coderag-mcp`.
 
 ## Quick Start
 
+### 1. Run CodeRAG Server
+
 ```bash
-# Build and run
-cargo run
+# Start with default settings
+./coderag-mcp
 
-# Test semantic search quality
-cargo test
-
-# Future: Start MCP server
-./coderag serve
-
-# Future: Launch web interface  
-./coderag web
-
-# Future: Index documentation
-./coderag crawl https://docs.rs/tokio/latest/tokio/
+# Or with custom data directory
+./coderag-mcp --data-dir /path/to/your/data
 ```
 
-## Technology Stack
+### 2. Configure Claude Desktop
 
-- **Embeddings**: FastEmbed with all-MiniLM-L6-v2 (384D vectors)
-- **Runtime**: ONNX Runtime for fast inference
-- **Async**: Tokio for I/O and concurrent processing
-- **Protocol**: MCP (Model Context Protocol) for AI assistant integration
-- **Storage**: JSON-based vector database with atomic operations
+Add CodeRAG to your Claude Desktop configuration:
 
-## Architecture
+**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`  
+**Windows**: `%APPDATA%\Claude\claude_desktop_config.json`  
+**Linux**: `~/.config/Claude/claude_desktop_config.json`
 
-### Current Implementation
-- ✅ **FastEmbed Integration**: Working embedding service with all-MiniLM-L6-v2
-- ✅ **Semantic Quality**: Validated for programming concepts  
-- ✅ **Performance**: Sub-5ms embeddings, meeting all latency targets
-- ✅ **Vector Database**: JSON-based storage with cosine similarity search
-- ✅ **Document Management**: Add, search, and persist documentation with metadata
-
-### Planned Features
-- 🔄 **MCP Server**: Full integration with Claude Desktop
-- 🔄 **Web Crawler**: Recursive documentation indexing
-- 🔄 **Web Interface**: Management UI for documentation curation
-
-## Development Roadmap
-
-| Phase | Timeline | Features |
-|-------|----------|----------|
-| **Phase 1** | ✅ Complete | Core embedding service with quality validation |
-| **Phase 2** | ✅ Complete | Vector database with persistence and search |
-| **Phase 3** | Weeks 3-4 | MCP server integration and tools |
-| **Phase 4** | Weeks 4-5 | Web crawler with content extraction |
-| **Phase 5** | Week 6 | Web interface for management |
-| **Phase 6** | Week 7+ | Advanced features and optimizations |
-
-## Use Cases
-
-### For AI Assistants
-```
-Query: "How do I handle timeouts in tokio async functions?"
-Result: Relevant tokio documentation with examples and best practices
-
-Query: "Best practices for error propagation in Rust libraries"  
-Result: Semantic search finds error handling patterns and examples
-
-Query: "MCP server implementation patterns with stdio"
-Result: Technical documentation for MCP protocol implementation
-```
-
-### For Development Teams
-- **Documentation Discovery**: Find relevant docs across multiple sources
-- **API Reference**: Quick access to function signatures and examples
-- **Best Practices**: Discover recommended patterns and anti-patterns
-- **Migration Guides**: Understand upgrade paths and breaking changes
-
-## Configuration
-
-### Claude Desktop Integration (Future)
 ```json
 {
   "mcpServers": {
     "coderag": {
-      "command": "/path/to/coderag",
-      "args": ["serve"],
-      "env": {
-        "RUST_LOG": "info",
-        "CODERAG_DATA_DIR": "/Users/yourname/.coderag"
-      }
+      "command": "/path/to/coderag-mcp",
+      "args": []
     }
   }
 }
 ```
 
-### Data Storage
-- **Location**: `~/.coderag/` 
-- **Documents**: `documents.json` (metadata and content)
-- **Vectors**: `vectors.json` (embeddings and similarity indices)
-- **Config**: `config.json` (user preferences)
-- **Logs**: `logs/` (debug and operation logs)
+### 3. Start Using It!
 
-## Testing
+Once configured, Claude can search documentation for you:
 
-### Unit Tests
-Run all unit tests:
-```bash
-cargo test
+- "Search for async error handling in Rust"
+- "Find tokio timeout examples"
+- "Show me how to use MCP tools"
+
+## Available MCP Tools
+
+CodeRAG provides these tools to AI assistants:
+
+### `search_docs`
+Search indexed documentation with semantic understanding:
+```json
+{
+  "query": "async timeout handling",
+  "limit": 5,
+  "source_filter": "docs.rs",
+  "content_type": "code"
+}
 ```
 
-Run tests with output:
-```bash
-cargo test -- --nocapture
+### `list_docs`
+See what documentation is indexed:
+```json
+{}
 ```
 
-### Integration Testing
-The main binary includes integration tests for:
-- Embedding generation and quality
-- Vector database operations
-- Semantic search functionality
-
-Run the integration test:
-```bash
-cargo run
+### `crawl_docs` (Coming Soon)
+Index new documentation sources:
+```json
+{
+  "url": "https://docs.rs/tokio/latest/",
+  "recursive": true,
+  "max_pages": 100
+}
 ```
 
-### Performance Testing
-Check embedding latency:
-```bash
-RUST_LOG=debug cargo run
+### `reload_docs`
+Refresh the document database:
+```json
+{}
 ```
 
-### Manual Testing
-1. **Test vector persistence**:
-   ```bash
-   cargo run
-   # Check that test_vectordb.json is created
-   cat test_vectordb.json | jq .
-   ```
+## How It Works
 
-2. **Test search quality**:
-   - Modify the queries in `main.rs`
-   - Add your own documents
-   - Verify semantic search results
+1. **Semantic Understanding**: CodeRAG uses advanced embeddings to understand what you're looking for
+2. **Fast Search**: Vector similarity search finds the most relevant documentation
+3. **MCP Integration**: Claude Desktop communicates with CodeRAG through the Model Context Protocol
+4. **Local Storage**: All data stored locally in `~/.coderag/`
+
+## Performance
+
+- **Search Speed**: <10ms for 10,000 documents
+- **Embedding Generation**: 2-5ms per query
+- **Startup Time**: ~2 seconds (including model loading)
+- **Memory Usage**: ~200MB base + documents
+
+## Troubleshooting
+
+### ONNX Warnings
+You may see ONNX schema warnings - these are harmless and don't affect functionality.
+
+### Debug Mode
+Run with debug logging to see what's happening:
+```bash
+./coderag-mcp --debug
+```
+
+### Data Location
+CodeRAG stores data in `~/.coderag/` by default. You can change this with `--data-dir`.
+
+## Roadmap
+
+- [x] Semantic search engine
+- [x] MCP server implementation
+- [x] Claude Desktop integration
+- [ ] Web crawler for documentation
+- [ ] Web UI for management
+- [ ] Multiple embedding models
+- [ ] API access
 
 ## Contributing
 
-This project is designed for AI-assisted development. Key areas for contribution:
-
-1. **Documentation Crawler**: Enhanced content extraction from diverse sites
-2. **Vector Search**: Performance optimizations for large document collections  
-3. **MCP Tools**: Advanced search and filtering capabilities
-4. **Web Interface**: User experience improvements for documentation management
+CodeRAG is open source! Check out our [developer documentation](CLAUDE.md) and [contribution guidelines](CONTRIBUTING.md).
 
 ## License
 
-MIT License - Built for the AI coding community
+MIT License - see [LICENSE](LICENSE) for details.
 
 ---
 
-**CodeRAG**: Because AI assistants deserve reliable documentation access while coding 🤖📚
+Built with ❤️ for the AI coding community

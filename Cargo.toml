@@ -9,6 +9,10 @@ repository = "https://github.com/yourname/coderag"
 keywords = ["documentation", "rag", "ai", "mcp", "embeddings"]
 categories = ["development-tools", "web-programming"]
 
+[[bin]]
+name = "coderag-mcp"
+path = "src/bin/mcp-server.rs"
+
 [dependencies]
 # Embedding implementations - try both approaches
 fastembed = "4.8.0"           # ONNX-based embeddings (primary)
@@ -37,6 +41,16 @@ thiserror = "1.0"
 # Logging
 tracing = "0.1"
 tracing-subscriber = "0.3"
+
+# CLI parsing (for MCP server binary)
+clap = { version = "4.5", features = ["derive"] }
+
+# JSON-RPC for MCP protocol
+jsonrpc-core = "18.0"
+jsonrpc-derive = "18.0"
+
+# For generating UUIDs
+uuid = { version = "1.10", features = ["v4", "serde"] }
 
 [dev-dependencies]
 tempfile = "3.0"

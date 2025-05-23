@@ -2,7 +2,18 @@
   "permissions": {
     "allow": [
       "Bash(cargo:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(ls:*)",
+      "Bash(find:*)",
+      "Bash(rg:*)",
+      "Bash(tree:*)",
+      "Bash(git checkout:*)",
+      "WebFetch",
+      "List",
+      "Edit",
+      "Read",
+      "Bash(grep:*)",
+      "WebFetch(domain:docs.anthropic.com)"
     ],
     "deny": []
   }
