@@ -13,7 +13,8 @@
       "Edit",
       "Read",
       "Bash(grep:*)",
-      "Bash(pre-commit:*)"
+      "Bash(pre-commit:*)",
+      "Bash(git add:*)"
     ],
     "deny": []
   }
