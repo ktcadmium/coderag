@@ -41,7 +41,7 @@
 ### 🔄 Phase 4: Web Crawler (Next)
 **What's Needed:**
 - HTML content extraction
-- Recursive crawling logic  
+- Recursive crawling logic
 - Rate limiting and robots.txt compliance
 - Document chunking strategy
 - Progress reporting
@@ -80,7 +80,7 @@
 
 ### Performance
 - ✅ Embedding generation: 2-5ms (target: <5ms)
-- ✅ Vector search: ~10ms for 10k docs (target: <10ms)  
+- ✅ Vector search: ~10ms for 10k docs (target: <10ms)
 - ✅ Startup time: ~2s with model load (target: <2s)
 - ✅ Memory usage: ~200MB base (target: <100MB) - *slightly over*
 

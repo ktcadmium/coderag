@@ -13,7 +13,7 @@
       "Edit",
       "Read",
       "Bash(grep:*)",
-      "WebFetch(domain:docs.anthropic.com)"
+      "Bash(pre-commit:*)"
     ],
     "deny": []
   }

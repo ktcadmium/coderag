@@ -1,7 +1,7 @@
 //! Similarity search implementation for vector database
 
 use crate::vectordb::storage::VectorStorage;
-use crate::vectordb::types::{Document, ContentType};
+use crate::vectordb::types::{ContentType, Document};
 use anyhow::Result;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
@@ -48,15 +48,17 @@ impl Eq for SearchResult {}
 
 impl PartialOrd for SearchResult {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        // Reverse order for max heap
-        other.score.partial_cmp(&self.score)
+        Some(self.cmp(other))
     }
 }
 
 impl Ord for SearchResult {
     fn cmp(&self, other: &Self) -> Ordering {
-        // Handle NaN cases
-        self.partial_cmp(other).unwrap_or(Ordering::Equal)
+        // Reverse order for max heap, handle NaN cases
+        other
+            .score
+            .partial_cmp(&self.score)
+            .unwrap_or(Ordering::Equal)
     }
 }
 
@@ -65,15 +67,15 @@ fn cosine_similarity(a: &[f32], b: &[f32]) -> f32 {
     if a.len() != b.len() {
         return 0.0;
     }
-    
+
     let dot_product: f32 = a.iter().zip(b.iter()).map(|(x, y)| x * y).sum();
     let norm_a: f32 = a.iter().map(|x| x * x).sum::<f32>().sqrt();
     let norm_b: f32 = b.iter().map(|x| x * x).sum::<f32>().sqrt();
-    
+
     if norm_a == 0.0 || norm_b == 0.0 {
         return 0.0;
     }
-    
+
     dot_product / (norm_a * norm_b)
 }
 
@@ -84,7 +86,7 @@ pub fn search_documents(
     options: SearchOptions,
 ) -> Result<Vec<SearchResult>> {
     let mut heap = BinaryHeap::new();
-    
+
     // Search through all entries
     for entry in storage.get_all_entries() {
         // Apply filters
@@ -93,29 +95,29 @@ pub fn search_documents(
                 continue;
             }
         }
-        
+
         if let Some(content_type_filter) = options.content_type_filter {
             if entry.document.metadata.content_type != content_type_filter {
                 continue;
             }
         }
-        
+
         // Calculate similarity
         let score = cosine_similarity(query_embedding, &entry.vector.values);
-        
+
         // Apply minimum score filter
         if let Some(min_score) = options.min_score {
             if score < min_score {
                 continue;
             }
         }
-        
+
         // Add to results
         heap.push(SearchResult {
             document: entry.document.clone(),
             score,
         });
-        
+
         // Keep only top K results for efficiency
         if heap.len() > options.limit * 2 {
             // Create temporary vector and sort
@@ -125,30 +127,30 @@ pub fn search_documents(
             heap = temp.into_iter().collect();
         }
     }
-    
+
     // Extract final results
     let mut results: Vec<_> = heap.into_iter().collect();
     results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap_or(Ordering::Equal));
     results.truncate(options.limit);
-    
+
     Ok(results)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn test_cosine_similarity() {
         // Identical vectors
         let v1 = vec![1.0, 0.0, 0.0];
         let v2 = vec![1.0, 0.0, 0.0];
         assert!((cosine_similarity(&v1, &v2) - 1.0).abs() < 0.0001);
-        
+
         // Orthogonal vectors
         let v3 = vec![0.0, 1.0, 0.0];
         assert!((cosine_similarity(&v1, &v3) - 0.0).abs() < 0.0001);
-        
+
         // Opposite vectors
         let v4 = vec![-1.0, 0.0, 0.0];
         assert!((cosine_similarity(&v1, &v4) - -1.0).abs() < 0.0001);

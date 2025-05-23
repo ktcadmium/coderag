@@ -13,7 +13,7 @@ We are on the `phase-3-mcp-integration` branch, having just completed Phase 3 of
 
 2. **Implemented All MCP Tools**
    - `search_docs`: Full semantic search with filtering
-   - `list_docs`: Document inventory reporting  
+   - `list_docs`: Document inventory reporting
    - `crawl_docs`: Stub for Phase 4 implementation
    - `reload_docs`: Database reload functionality
 
@@ -39,7 +39,7 @@ We are on the `phase-3-mcp-integration` branch, having just completed Phase 3 of
 2. **Unused Imports**: Several warnings that should be cleaned up
 3. **Hard-coded Values**: Some configuration should be externalized
 
-### API Limitations  
+### API Limitations
 1. **List Docs Incomplete**: Currently returns placeholder data (no direct access to all docs)
 2. **No Document Management**: Can't add/remove individual documents via MCP yet
 3. **Search Only**: Need crawler implementation for actual document indexing
@@ -66,7 +66,7 @@ We are on the `phase-3-mcp-integration` branch, having just completed Phase 3 of
 - Used stdio transport for maximum compatibility
 - Implemented all tools even if some are stubs
 
-### Error Handling Strategy  
+### Error Handling Strategy
 - Convert all errors to MCP error responses
 - Log errors but don't crash server
 - Provide helpful error messages to AI
@@ -89,7 +89,7 @@ pub async fn new() -> Result<Self>
 // Tools must return this exact structure
 {
   "content": [{
-    "type": "text", 
+    "type": "text",
     "text": "json_stringified_response"
   }]
 }
@@ -115,7 +115,7 @@ pub async fn new() -> Result<Self>
 - `RUST_LOG`: Set to `debug` for verbose output
 - `HOME`: Used for expanding `~` in paths
 
-### Default Paths  
+### Default Paths
 - Data directory: `~/.coderag/`
 - Database file: `coderag_vectordb.json`
 - Models cached by FastEmbed: `~/.cache/fastembed/`

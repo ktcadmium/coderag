@@ -7,16 +7,16 @@ use thiserror::Error;
 pub enum McpError {
     #[error("Parse error: {0}")]
     Parse(String),
-    
+
     #[error("Invalid request: {0}")]
     InvalidRequest(String),
-    
+
     #[error("Method not found: {0}")]
     MethodNotFound(String),
-    
+
     #[error("Invalid params: {0}")]
     InvalidParams(String),
-    
+
     #[error("Internal error: {0}")]
     Internal(String),
 }

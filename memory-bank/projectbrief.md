@@ -5,7 +5,7 @@ CodeRAG is a documentation RAG (Retrieval-Augmented Generation) system designed 
 
 ## Core Objectives
 1. **Eliminate External Dependencies**: Single binary deployment with no Ollama requirement
-2. **Clean Team Adoption**: Simple setup for development teams with minimal AI/ML experience  
+2. **Clean Team Adoption**: Simple setup for development teams with minimal AI/ML experience
 3. **Autonomous AI Coding Support**: Reliable access to current documentation for AI assistants during programming
 4. **Performance**: Fast embedding generation and vector search for real-time coding assistance
 5. **Quality Documentation Retrieval**: Semantic search that understands programming concepts and technical relationships

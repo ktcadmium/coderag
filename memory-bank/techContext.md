@@ -127,7 +127,7 @@ src/
 // Application errors
 use anyhow::{Result, Context};
 
-// Library errors  
+// Library errors
 use thiserror::Error;
 
 // MCP errors mapped to codes

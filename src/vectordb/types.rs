@@ -29,7 +29,8 @@ impl Vector {
             return 0.0;
         }
 
-        let dot_product: f32 = self.values
+        let dot_product: f32 = self
+            .values
             .iter()
             .zip(&other.values)
             .map(|(a, b)| a * b)
@@ -113,7 +114,7 @@ mod tests {
         let v1 = Vector::new(vec![1.0, 0.0, 0.0]);
         let v2 = Vector::new(vec![1.0, 0.0, 0.0]);
         let v3 = Vector::new(vec![0.0, 1.0, 0.0]);
-        
+
         assert!((v1.cosine_similarity(&v2) - 1.0).abs() < 0.0001);
         assert!((v1.cosine_similarity(&v3) - 0.0).abs() < 0.0001);
     }
@@ -122,7 +123,7 @@ mod tests {
     fn test_vector_normalization() {
         let mut v = Vector::new(vec![3.0, 4.0, 0.0]);
         v.normalize();
-        
+
         let magnitude: f32 = v.values.iter().map(|x| x * x).sum::<f32>().sqrt();
         assert!((magnitude - 1.0).abs() < 0.0001);
     }
