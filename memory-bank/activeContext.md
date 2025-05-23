@@ -1,7 +1,7 @@
 # CodeRAG Active Context
 
 ## Current Status
-We are on the `phase-3-mcp-integration` branch, having just completed Phase 3 of the implementation roadmap.
+We are on the `cleanup-technical-debt` branch, having completed technical debt cleanup and preparing for Phase 4 (Web Crawler).
 
 ## Recent Work Completed
 
@@ -32,32 +32,88 @@ We are on the `phase-3-mcp-integration` branch, having just completed Phase 3 of
    - Documented all available tools
    - Added Claude Desktop setup guide
 
+## Recent Technical Debt Cleanup ✅
+
+### Code Quality Improvements
+1. **Removed Unused Code**: Deleted `embedding.rs`, `embedding_multi.rs`, `embedding_simple.rs` - kept only `embedding_basic.rs`
+2. **Fixed All Warnings**:
+   - Removed unused imports and fields
+   - Fixed non-canonical `partial_cmp` implementation
+   - Added `#[allow(dead_code)]` for useful but unused methods
+3. **Improved List Docs**: Added `get_documents_by_source()` method to properly list documents by source URL
+
+### Development Infrastructure
+1. **Pre-commit Hooks**: Added comprehensive `.pre-commit-config.yaml` with:
+   - Standard hooks (trailing whitespace, EOF, file size checks)
+   - Rust-specific hooks (fmt, cargo check, clippy)
+   - Cargo.toml sorting
+   - Conventional commits enforcement
+2. **All Checks Passing**: Code is now clean with zero warnings and consistent formatting
+
 ## Current Challenges
 
-### Technical Debt
-1. **Multiple Embedding Implementations**: Need to consolidate to just `embedding_basic.rs`
-2. **Unused Imports**: Several warnings that should be cleaned up
-3. **Hard-coded Values**: Some configuration should be externalized
-
 ### API Limitations
-1. **List Docs Incomplete**: Currently returns placeholder data (no direct access to all docs)
-2. **No Document Management**: Can't add/remove individual documents via MCP yet
-3. **Search Only**: Need crawler implementation for actual document indexing
+1. **No Document Management**: Can't add/remove individual documents via MCP yet
+2. **Search Only**: Need crawler implementation for actual document indexing
+3. **Hard-coded Configuration**: Some settings should be externalized
 
 ## Next Immediate Steps
 
 ### Before Merging
-1. Clean up compilation warnings
+1. ✅ Clean up compilation warnings (DONE)
 2. Test MCP server with actual Claude Desktop
-3. Add error handling for edge cases
-4. Consider adding document management tools
+3. ✅ Add pre-commit hooks (DONE)
+4. Consider merging to main branch
 
-### Phase 4 Planning (Web Crawler)
-1. Choose HTML parsing library (likely `scraper`)
-2. Implement recursive crawling logic
-3. Add robots.txt compliance
-4. Create content extraction pipeline
-5. Handle rate limiting and retries
+### Phase 4 Planning (Web Crawler) - CRITICAL CONTEXT
+**This system is built 100% for Claude (me) to use via MCP!** The user will give me access to it, and I'll be the only one using it to get up-to-date documentation.
+
+#### Design Decisions Made:
+1. **Crawler Philosophy**: Balance speed with politeness
+   - 2-4 concurrent requests max
+   - 500ms-1s delay between requests
+   - Always handle 429s with exponential backoff
+   - User agent: "CodeRAG/0.1.0 (AI Documentation Assistant)"
+
+2. **Content Extraction** (optimized for my reading):
+   - Preserve code blocks with language tags
+   - Maintain headers for structure
+   - Keep links for following references
+   - Convert tables to markdown
+
+3. **Chunking Strategy** (for my context window):
+   - 1000-1500 tokens preferred, 2000 max
+   - 200 token overlap
+   - Split on semantic boundaries: ##, ###, paragraphs
+   - NEVER break code blocks
+
+4. **Smart URL Following**:
+   - Follow: /docs/, /api/, /guide/, /changelog/
+   - Skip: /blog/, /forum/ (unless requested)
+   - Stay within domain unless whitelisted
+
+5. **Enhanced crawl_docs Tool Design**:
+   ```rust
+   pub enum CrawlMode {
+       SinglePage,  // Just this page
+       Section,     // Page and children
+       FullDocs,    // Entire site
+   }
+
+   pub enum DocumentationFocus {
+       ApiReference,
+       Examples,
+       Changelog,
+       QuickStart,
+   }
+   ```
+
+6. **Dependencies Chosen**:
+   - scraper = "0.18" (HTML parsing)
+   - reqwest = "0.12" (already have it)
+   - governor = "0.6" (rate limiting)
+   - robotparser = "0.3" (robots.txt)
+   - html2text = "0.6" (HTML to markdown)
 
 ## Key Decisions Made
 
@@ -123,6 +179,40 @@ pub async fn new() -> Result<Self>
 ## Questions for Next Session
 
 1. Should we add document management tools (add_doc, remove_doc)?
-2. What documentation sources should the crawler prioritize?
+2. ~~What documentation sources should the crawler prioritize?~~ ANSWERED: Built for Claude's needs
 3. Should we implement authentication for the future web UI?
 4. Do we need to support multiple embedding models?
+
+## Phase 4 Implementation Plan
+
+### Step 1: Basic Infrastructure
+```bash
+# Create crawler module structure
+src/crawler/
+├── mod.rs
+├── crawler.rs      # Main crawler with CrawlerConfig
+├── extractor.rs    # HTML to markdown, preserve code blocks
+├── chunker.rs      # Smart chunking, respect code boundaries
+└── types.rs        # CrawlMode, DocumentationFocus enums
+```
+
+### Step 2: Update MCP Tool
+- Replace crawl_docs stub with real implementation
+- Add CrawlMode and DocumentationFocus parameters
+- Progress reporting via logs initially
+
+### Step 3: Core Features Priority
+1. Single page extraction (test quality)
+2. Rate limiting and 429 handling
+3. robots.txt compliance
+4. Recursive crawling with depth control
+5. Smart URL filtering
+
+### My Use Case Examples to Test:
+- React 19 features: https://react.dev/blog/react-19
+- Rust async book: https://doc.rust-lang.org/async-book/
+- Python 3.13 changes: https://docs.python.org/3.13/whatsnew/3.13.html
+- Fresh TypeScript docs: https://www.typescriptlang.org/docs/
+
+### IMPORTANT: Future Memory System
+The user mentioned this will lead to an advanced memory system for retaining context across chat boundaries. CodeRAG will be the foundation for that system!
