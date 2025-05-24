@@ -22,17 +22,25 @@ anyhow = "1.0"
 candle-core = "0.9.1"
 candle-nn = "0.9.1"
 candle-transformers = "0.9.1"
+# robotparser = "0.3"         # Conflicts with openssl - TODO: find alternative
+chrono = "0.4"                # Date/time for metadata
 
 # CLI parsing (for MCP server binary)
 clap = { version = "4.5", features = ["derive"] }
 # Embedding implementations - try both approaches
 fastembed = "4.8.0"           # ONNX-based embeddings (primary)
+governor = "0.6"              # Rate limiting
 hf-hub = "0.3"
+html2text = "0.12"            # Convert HTML to markdown
 
 # JSON-RPC for MCP protocol
 jsonrpc-core = "18.0"
 jsonrpc-derive = "18.0"
+regex = "1.11"                # Pattern matching for cleanup
 reqwest = { version = "0.12", features = ["json"] }
+
+# Web crawling dependencies
+scraper = "0.20"              # HTML parsing and CSS selectors
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
@@ -48,6 +56,7 @@ tokio = { version = "1.0", features = ["full"] }
 # Logging
 tracing = "0.1"
 tracing-subscriber = "0.3"
+url = "2.5"                   # URL parsing and manipulation
 
 # For generating UUIDs
 uuid = { version = "1.10", features = ["v4", "serde"] }

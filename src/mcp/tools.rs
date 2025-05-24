@@ -1,11 +1,13 @@
+use crate::crawler::{CrawlConfig, CrawlMode, Crawler, DocumentationFocus};
 use crate::mcp::protocol::*;
 use crate::vectordb::{SearchOptions, VectorDatabase};
 use crate::EmbeddingService;
 use anyhow::Result;
 use serde_json::json;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
-use tracing::{error, info, warn};
+use tracing::{error, info};
+use url::Url;
 
 pub struct McpTools {
     embedding_service: EmbeddingService,
@@ -73,10 +75,17 @@ impl McpTools {
                             "type": "string",
                             "description": "The URL to crawl"
                         },
-                        "recursive": {
-                            "type": "boolean",
-                            "description": "Whether to crawl recursively",
-                            "default": true
+                        "mode": {
+                            "type": "string",
+                            "description": "Crawl mode: 'single' (just this page), 'section' (page and children), 'full' (entire site)",
+                            "default": "single",
+                            "enum": ["single", "section", "full"]
+                        },
+                        "focus": {
+                            "type": "string",
+                            "description": "Content focus: 'api', 'examples', 'changelog', 'quickstart', or 'all'",
+                            "default": "all",
+                            "enum": ["api", "examples", "changelog", "quickstart", "all"]
                         },
                         "max_pages": {
                             "type": "number",
@@ -183,16 +192,90 @@ impl McpTools {
     }
 
     pub async fn crawl_docs(&mut self, params: CrawlDocsParams) -> Result<CrawlDocsResponse> {
-        warn!("🕷️ Crawl functionality not yet implemented");
+        info!("🕷️ Starting crawl of: {}", params.url);
 
-        // TODO: Implement web crawler in Phase 4
-        Ok(CrawlDocsResponse {
-            status: "pending".to_string(),
-            message: format!(
-                "Crawling functionality will be implemented in Phase 4. URL: {}",
-                params.url
-            ),
-        })
+        // Parse the crawl mode
+        let mode = match params.mode.as_str() {
+            "single" => CrawlMode::SinglePage,
+            "section" => CrawlMode::Section,
+            "full" => CrawlMode::FullDocs,
+            _ => CrawlMode::SinglePage,
+        };
+
+        // Parse the documentation focus
+        let focus = match params.focus.as_str() {
+            "api" => DocumentationFocus::ApiReference,
+            "examples" => DocumentationFocus::Examples,
+            "changelog" => DocumentationFocus::Changelog,
+            "quickstart" => DocumentationFocus::QuickStart,
+            _ => DocumentationFocus::All,
+        };
+
+        // Parse URL to get allowed domain
+        let parsed_url = match Url::parse(&params.url) {
+            Ok(url) => url,
+            Err(e) => {
+                return Ok(CrawlDocsResponse {
+                    status: "error".to_string(),
+                    message: format!("Invalid URL: {}", e),
+                });
+            }
+        };
+
+        let mut allowed_domains = HashSet::new();
+        if let Some(host) = parsed_url.host_str() {
+            allowed_domains.insert(host.to_string());
+        }
+
+        // Create crawler configuration
+        let config = CrawlConfig {
+            start_url: params.url.clone(),
+            mode,
+            focus,
+            max_pages: params.max_pages,
+            allowed_domains,
+            ..Default::default()
+        };
+
+        // Create and run crawler
+        let crawler = match Crawler::new(config).await {
+            Ok(c) => c,
+            Err(e) => {
+                return Ok(CrawlDocsResponse {
+                    status: "error".to_string(),
+                    message: format!("Failed to create crawler: {}", e),
+                });
+            }
+        };
+
+        // Run the crawl
+        match crawler
+            .crawl(&self.embedding_service, &mut self.vector_db)
+            .await
+        {
+            Ok(crawled_urls) => {
+                // Save the updated database
+                if let Err(e) = self.vector_db.save() {
+                    error!("Failed to save database after crawl: {}", e);
+                }
+
+                Ok(CrawlDocsResponse {
+                    status: "success".to_string(),
+                    message: format!(
+                        "Successfully crawled {} pages from {}",
+                        crawled_urls.len(),
+                        params.url
+                    ),
+                })
+            }
+            Err(e) => {
+                error!("Crawl failed: {}", e);
+                Ok(CrawlDocsResponse {
+                    status: "error".to_string(),
+                    message: format!("Crawl failed: {}", e),
+                })
+            }
+        }
     }
 
     pub async fn reload_docs(&mut self) -> Result<ReloadDocsResponse> {

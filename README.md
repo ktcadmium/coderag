@@ -92,15 +92,28 @@ See what documentation is indexed:
 {}
 ```
 
-### `crawl_docs` (Coming Soon)
-Index new documentation sources:
+### `crawl_docs`
+Index new documentation sources with smart crawling:
 ```json
 {
   "url": "https://docs.rs/tokio/latest/",
-  "recursive": true,
+  "mode": "section",
+  "focus": "api",
   "max_pages": 100
 }
 ```
+
+**Crawl Modes:**
+- `single`: Just the specified page
+- `section`: Page and its direct children
+- `full`: Entire documentation site
+
+**Focus Options:**
+- `api`: API reference documentation
+- `examples`: Code examples and tutorials
+- `changelog`: Version history and updates
+- `quickstart`: Getting started guides
+- `all`: No specific focus
 
 ### `reload_docs`
 Refresh the document database:
@@ -136,12 +149,21 @@ Run with debug logging to see what's happening:
 ### Data Location
 CodeRAG stores data in `~/.coderag/` by default. You can change this with `--data-dir`.
 
+## Features in Detail
+
+### Smart Web Crawler
+- **Polite crawling**: Rate limiting and configurable delays
+- **Code-aware chunking**: Never breaks code blocks mid-example
+- **Content extraction**: Preserves code formatting and structure
+- **URL filtering**: Stays within documentation paths
+- **Domain restrictions**: Prevents scope creep
+
 ## Roadmap
 
 - [x] Semantic search engine
 - [x] MCP server implementation
 - [x] Claude Desktop integration
-- [ ] Web crawler for documentation
+- [x] Web crawler for documentation
 - [ ] Web UI for management
 - [ ] Multiple embedding models
 - [ ] API access

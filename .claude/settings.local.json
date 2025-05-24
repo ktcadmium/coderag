@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
+      "Bash(*cargo *)",
       "Bash(cargo:*)",
+      "Bash(cd:*)",
       "Bash(mkdir:*)",
       "Bash(ls:*)",
       "Bash(find:*)",
@@ -14,7 +16,9 @@
       "Read",
       "Bash(grep:*)",
       "Bash(pre-commit:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(rustc:*)",
+      "Bash(./test_startup)"
     ],
     "deny": []
   }

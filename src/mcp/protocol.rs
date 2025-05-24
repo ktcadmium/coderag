@@ -140,14 +140,20 @@ pub struct DocSource {
 #[derive(Debug, Deserialize, Serialize)]
 pub struct CrawlDocsParams {
     pub url: String,
-    #[serde(default = "default_recursive")]
-    pub recursive: bool,
+    #[serde(default = "default_crawl_mode")]
+    pub mode: String, // "single", "section", "full"
+    #[serde(default = "default_focus")]
+    pub focus: String, // "api", "examples", "changelog", "quickstart", "all"
     #[serde(default = "default_max_pages")]
     pub max_pages: usize,
 }
 
-fn default_recursive() -> bool {
-    true
+fn default_crawl_mode() -> String {
+    "single".to_string()
+}
+
+fn default_focus() -> String {
+    "all".to_string()
 }
 
 fn default_max_pages() -> usize {

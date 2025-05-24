@@ -1,3 +1,4 @@
+pub mod crawler;
 pub mod embedding_basic;
 pub mod mcp;
 pub mod vectordb;

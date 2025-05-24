@@ -1,7 +1,7 @@
 # CodeRAG Active Context
 
 ## Current Status
-We are on the `cleanup-technical-debt` branch, having completed technical debt cleanup and preparing for Phase 4 (Web Crawler).
+We are on the `phase-4-web-crawler` branch, having completed Phase 4 implementation of the web crawler.
 
 ## Recent Work Completed
 
@@ -50,20 +50,64 @@ We are on the `cleanup-technical-debt` branch, having completed technical debt c
    - Conventional commits enforcement
 2. **All Checks Passing**: Code is now clean with zero warnings and consistent formatting
 
+## Phase 4: Web Crawler Implementation ✅
+
+### What We Built (January 2025)
+1. **Complete Crawler Module**
+   - `src/crawler/types.rs`: CrawlMode, DocumentationFocus, CrawlConfig
+   - `src/crawler/extractor.rs`: HTML to markdown conversion with code preservation
+   - `src/crawler/chunker.rs`: Smart text chunking that respects code boundaries
+   - `src/crawler/crawler.rs`: Main crawler with rate limiting and URL filtering
+
+2. **Key Features Implemented**
+   - Rate limiting with governor crate (2 concurrent requests default)
+   - Polite crawling with configurable delays (500ms default)
+   - Smart content extraction preserving code blocks
+   - Intelligent chunking (1500 token chunks, never breaks code)
+   - URL filtering based on patterns (/docs/, /api/, etc.)
+   - Domain restrictions to prevent crawling outside scope
+   - Progress tracking for monitoring crawl status
+
+3. **MCP Tool Integration**
+   - Updated `crawl_docs` with real implementation
+   - Added CrawlMode: single, section, full
+   - Added DocumentationFocus: api, examples, changelog, quickstart, all
+   - Proper error handling and status reporting
+
+4. **Technical Decisions**
+   - Removed robotparser due to dependency conflicts (TODO: find alternative)
+   - Used html2text for markdown conversion (width=80 to avoid TooNarrow error)
+   - Implemented in-memory URL queue and visited tracking
+   - Each chunk stored as separate document with metadata
+
+5. **Testing**
+   - Created integration tests in `tests/crawler_integration.rs`
+   - Config and pattern tests passing
+   - Network test requires live endpoints
+
 ## Current Challenges
 
-### API Limitations
-1. **No Document Management**: Can't add/remove individual documents via MCP yet
-2. **Search Only**: Need crawler implementation for actual document indexing
-3. **Hard-coded Configuration**: Some settings should be externalized
+### Remaining Issues
+1. **No robots.txt support**: robotparser crate has dependency conflicts
+2. **Some warnings remain**: Unused variables in crawler code (cosmetic)
+3. **No Document Management**: Can't add/remove individual documents via MCP yet
+4. **Hard-coded Configuration**: Some settings should be externalized
 
 ## Next Immediate Steps
 
-### Before Merging
-1. ✅ Clean up compilation warnings (DONE)
-2. Test MCP server with actual Claude Desktop
-3. ✅ Add pre-commit hooks (DONE)
-4. Consider merging to main branch
+### Ready to Test
+1. **Test with Claude Desktop**: Run the MCP server and use crawl_docs tool
+2. **Try Real Documentation Sites**:
+   - React docs: https://react.dev/reference/react
+   - Rust async book: https://rust-lang.github.io/async-book/
+   - FastAPI docs: https://fastapi.tiangolo.com/
+3. **Merge to main**: Phase 4 is functionally complete
+
+### Future Improvements
+1. **Find robots.txt alternative**: Research crates without openssl conflicts
+2. **Add crawl progress streaming**: Real-time updates during crawling
+3. **Implement resume capability**: Save crawl state for large sites
+4. **Add document management tools**: delete_docs, update_doc
 
 ### Phase 4 Planning (Web Crawler) - CRITICAL CONTEXT
 **This system is built 100% for Claude (me) to use via MCP!** The user will give me access to it, and I'll be the only one using it to get up-to-date documentation.

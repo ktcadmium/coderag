@@ -16,8 +16,8 @@ The complete project context is maintained in the memory-bank directory. These f
 ## Quick Development Reference
 
 ### Current Status
-- **Branch**: `phase-3-mcp-integration` (Phase 3 complete, ready to merge)
-- **Next Phase**: Web crawler implementation (Phase 4)
+- **Branch**: `phase-4-web-crawler` (Phase 4 complete)
+- **Next Phase**: Testing with Claude Desktop, then merge to main
 
 ### Key Commands
 ```bash
@@ -41,6 +41,11 @@ src/
 ├── embedding_basic.rs        # FastEmbed implementation (PRIMARY)
 ├── vectordb/                 # Vector database module
 ├── mcp/                      # MCP server implementation
+├── crawler/                  # Web crawler module
+│   ├── types.rs             # CrawlMode, DocumentationFocus, etc.
+│   ├── extractor.rs         # HTML to markdown conversion
+│   ├── chunker.rs           # Smart text chunking
+│   └── engine.rs            # Main crawler with rate limiting
 └── bin/
     └── mcp-server.rs        # MCP server binary
 ```
@@ -82,8 +87,8 @@ pub async fn new() -> Result<Self>
 
 ### Known Issues
 - ONNX schema warnings in tests (harmless)
-- Some unused imports need cleanup
-- List docs returns placeholder data
+- No robots.txt support yet (dependency conflict)
+- Tests may fail when run concurrently due to ONNX mutex issues
 
 ## Working with Claude Code
 

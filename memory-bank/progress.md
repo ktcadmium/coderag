@@ -36,17 +36,20 @@
 - Comprehensive integration tests
 - Command-line interface with options
 
-**Current Branch:** `cleanup-technical-debt` (ready to merge)
+**Completed:** January 2025
 
-### 🔄 Phase 4: Web Crawler (Next)
-**What's Needed:**
-- HTML content extraction
-- Recursive crawling logic
-- Rate limiting and robots.txt compliance
-- Document chunking strategy
-- Progress reporting
+### ✅ Phase 4: Web Crawler (Complete)
+**What's Implemented:**
+- HTML content extraction with code preservation
+- Recursive crawling with depth control
+- Rate limiting (governor crate) and polite delays
+- Smart document chunking (respects code boundaries)
+- URL filtering and domain restrictions
+- Progress tracking
+- Full MCP integration with crawl_docs tool
 
-**Estimated Timeline:** 1-2 weeks
+**Completed:** January 23, 2025
+**Branch:** `phase-4-web-crawler`
 
 ### 📋 Phase 5: Web Interface (Future)
 **Planned Features:**
@@ -70,6 +73,8 @@
 1. ✅ **Compilation Warnings**: FIXED - All warnings resolved
 2. **ONNX Warnings**: Harmless schema registration warnings in tests (known upstream issue)
 3. ✅ **List Docs Limited**: FIXED - Now properly lists documents by source
+4. **No robots.txt support**: robotparser crate conflicts with openssl dependencies
+5. **Cosmetic warnings**: Some unused variables in crawler code (low priority)
 
 ### Technical Debt
 1. ✅ **Multiple Embedding Implementations**: FIXED - Consolidated to `embedding_basic.rs` only
@@ -162,3 +167,10 @@ The project is now in excellent shape for the web crawler implementation phase.
 - **Next Branch**: Will be `phase-4-web-crawler`
 - **Key Realization**: This system is built 100% for Claude to use via MCP
 - **Future Vision**: This will become foundation for advanced memory system across chats
+
+### Phase 4 Implementation (January 23, 2025)
+- **Branch**: `phase-4-web-crawler` implementation complete
+- **Key Achievement**: Full web crawler with smart chunking and rate limiting
+- **MCP Integration**: crawl_docs tool now fully functional with modes and focus options
+- **Ready for Testing**: Can now crawl real documentation sites via MCP
+- **Next Steps**: Test with Claude Desktop, then merge to main
