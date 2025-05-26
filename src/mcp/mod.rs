@@ -1,6 +1,3 @@
-pub mod protocol;
-pub mod server;
-pub mod tools;
+pub mod sdk_server;
 
-pub use protocol::{McpError, McpRequest, McpResponse};
-pub use server::McpServer;
+pub use sdk_server::CodeRagServer;

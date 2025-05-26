@@ -10,19 +10,19 @@ CodeRAG gives AI coding assistants like Claude instant access to up-to-date docu
 - 🎯 **Semantic Search**: Understands programming concepts, not just keywords
 - 📦 **Single Binary**: No Docker, no dependencies, just download and run
 - 🤖 **Claude Desktop Ready**: Works seamlessly with MCP (Model Context Protocol)
-- 📚 **Smart Indexing**: Crawl and index any documentation site (coming soon)
+- 📚 **Smart Indexing**: Crawl and index any documentation site
+- 🔄 **Lazy Loading**: AI model downloads automatically on first use
+- 🛡️ **Robust**: Handles network restrictions and sandbox environments
 
 ## Installation
-
-### Download Pre-built Binary (Recommended)
-
-Coming soon! For now, build from source.
 
 ### Build from Source
 
 Requirements:
+
 - Rust 1.70 or later
 - 4GB RAM (for embedding models)
+- Internet connection (for initial model download)
 
 ```bash
 git clone https://github.com/yourusername/coderag.git
@@ -32,19 +32,31 @@ cargo build --release --bin coderag-mcp
 
 The binary will be at `target/release/coderag-mcp`.
 
-## Quick Start
+### Development Workflow
 
-### 1. Run CodeRAG Server
+Use the included Taskfile for common operations:
 
 ```bash
-# Start with default settings
-./coderag-mcp
+# Install Task runner (if not already installed)
+brew install go-task/tap/go-task  # macOS
+# or: go install github.com/go-task/task/v3/cmd/task@latest
 
-# Or with custom data directory
-./coderag-mcp --data-dir /path/to/your/data
+# Quick development check
+task
+
+# Build release binary
+task release
+
+# Test crawling functionality
+task crawl-test
+
+# See all available tasks
+task --list
 ```
 
-### 2. Configure Claude Desktop
+## Quick Start
+
+### 1. Configure Claude Desktop
 
 Add CodeRAG to your Claude Desktop configuration:
 
@@ -57,15 +69,22 @@ Add CodeRAG to your Claude Desktop configuration:
   "mcpServers": {
     "coderag": {
       "command": "/path/to/coderag-mcp",
-      "args": []
+      "args": [],
+      "env": {
+        "HF_HUB_USER_AGENT_ORIGIN": "CodeRAG/0.1.0"
+      }
     }
   }
 }
 ```
 
-### 3. Start Using It!
+### 2. Start Using It!
 
-Once configured, Claude can search documentation for you:
+Once configured, restart Claude Desktop. CodeRAG will start automatically when Claude needs it.
+
+**First Use**: The AI model (~90MB) downloads automatically on your first search. This takes 1-2 minutes but only happens once.
+
+Example queries:
 
 - "Search for async error handling in Rust"
 - "Find tokio timeout examples"
@@ -76,101 +95,142 @@ Once configured, Claude can search documentation for you:
 CodeRAG provides these tools to AI assistants:
 
 ### `search_docs`
+
 Search indexed documentation with semantic understanding:
+
 ```json
 {
   "query": "async timeout handling",
   "limit": 5,
   "source_filter": "docs.rs",
-  "content_type": "code"
+  "content_type": "documentation"
 }
 ```
 
 ### `list_docs`
+
 See what documentation is indexed:
+
 ```json
 {}
 ```
 
 ### `crawl_docs`
-Index new documentation sources with smart crawling:
+
+Index new documentation sources:
+
 ```json
 {
   "url": "https://docs.rs/tokio/latest/",
-  "mode": "section",
-  "focus": "api",
+  "mode": "single",
+  "focus": "all",
   "max_pages": 100
 }
 ```
 
 **Crawl Modes:**
-- `single`: Just the specified page
+
+- `single`: Just the specified page (recommended for MCP)
 - `section`: Page and its direct children
 - `full`: Entire documentation site
 
 **Focus Options:**
+
 - `api`: API reference documentation
 - `examples`: Code examples and tutorials
 - `changelog`: Version history and updates
 - `quickstart`: Getting started guides
-- `all`: No specific focus
+- `all`: No specific focus (recommended)
 
 ### `reload_docs`
-Refresh the document database:
+
+Refresh the document database from disk:
+
 ```json
 {}
 ```
 
 ## How It Works
 
-1. **Semantic Understanding**: CodeRAG uses advanced embeddings to understand what you're looking for
-2. **Fast Search**: Vector similarity search finds the most relevant documentation
-3. **MCP Integration**: Claude Desktop communicates with CodeRAG through the Model Context Protocol
-4. **Local Storage**: All data stored locally in `~/.coderag/`
+1. **Lazy Initialization**: Model downloads only when first needed, avoiding startup delays
+2. **Semantic Understanding**: Uses all-MiniLM-L6-v2 embeddings (384 dimensions) for concept matching
+3. **Fast Search**: Vector similarity search with cosine distance
+4. **MCP Integration**: Standard JSON-RPC communication with Claude Desktop
+5. **Local Storage**: All data stored in `~/.coderag/coderag_vectordb.json`
 
 ## Performance
 
-- **Search Speed**: <10ms for 10,000 documents
-- **Embedding Generation**: 2-5ms per query
-- **Startup Time**: ~2 seconds (including model loading)
-- **Memory Usage**: ~200MB base + documents
+- **Search Speed**: <10ms for typical document collections
+- **Embedding Generation**: 2-5ms per query (after model loading)
+- **Model Loading**: ~4ms warm-up time (after initial download)
+- **Startup Time**: Instant (model loads on first search)
+- **Memory Usage**: ~200MB base + document storage
 
 ## Troubleshooting
 
-### ONNX Warnings
-You may see ONNX schema warnings - these are harmless and don't affect functionality.
+### ONNX Schema Warnings
+
+You may see ONNX schema warnings during model loading - these are harmless and don't affect functionality.
+
+### Network Issues
+
+If model download fails:
+
+1. Check your internet connection
+2. Try running the crawler directly: `./coderag-mcp crawl https://httpbin.org --verbose`
+3. Ensure the `HF_HUB_USER_AGENT_ORIGIN` environment variable is set
 
 ### Debug Mode
-Run with debug logging to see what's happening:
+
+Run with debug logging to see detailed operation:
+
 ```bash
 ./coderag-mcp --debug
 ```
 
 ### Data Location
+
 CodeRAG stores data in `~/.coderag/` by default. You can change this with `--data-dir`.
 
-## Features in Detail
+## Architecture
 
-### Smart Web Crawler
-- **Polite crawling**: Rate limiting and configurable delays
-- **Code-aware chunking**: Never breaks code blocks mid-example
-- **Content extraction**: Preserves code formatting and structure
-- **URL filtering**: Stays within documentation paths
-- **Domain restrictions**: Prevents scope creep
+### Embedding Strategy
 
-## Roadmap
+- **Model**: all-MiniLM-L6-v2 (384-dimensional vectors)
+- **Provider**: FastEmbed with ONNX Runtime
+- **Initialization**: Lazy loading on first search request
 
-- [x] Semantic search engine
-- [x] MCP server implementation
-- [x] Claude Desktop integration
-- [x] Web crawler for documentation
-- [ ] Web UI for management
-- [ ] Multiple embedding models
-- [ ] API access
+### Storage
+
+- **Format**: JSON-based vector database
+- **Location**: `~/.coderag/coderag_vectordb.json`
+- **Persistence**: Atomic writes with temp file + rename
+
+### MCP Integration
+
+- **Protocol**: JSON-RPC over stdio
+- **Transport**: Standard MCP stdio transport
+- **Error Handling**: Proper MCP error codes and messages
+
+## Current Status
+
+✅ **Stable Features:**
+
+- Semantic search with fast embeddings
+- MCP server with Claude Desktop integration
+- Single-page documentation crawling
+- Lazy model initialization
+- Robust error handling and network compatibility
+
+🚧 **In Development:**
+
+- Multi-page crawling in MCP context
+- Web UI for management
+- Additional embedding models
 
 ## Contributing
 
-CodeRAG is open source! Check out our [developer documentation](CLAUDE.md) and [contribution guidelines](CONTRIBUTING.md).
+CodeRAG is open source! Check out our [developer documentation](CLAUDE.md) and memory bank in `memory-bank/` for technical details.
 
 ## License
 

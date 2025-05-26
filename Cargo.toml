@@ -13,6 +13,10 @@ categories = ["development-tools", "web-programming"]
 name = "coderag-mcp"
 path = "src/bin/mcp-server.rs"
 
+[[bin]]
+name = "mcp-debug"
+path = "src/bin/mcp-debug.rs"
+
 [dependencies]
 
 # Error handling
@@ -27,6 +31,7 @@ chrono = "0.4"                # Date/time for metadata
 
 # CLI parsing (for MCP server binary)
 clap = { version = "4.5", features = ["derive"] }
+dirs = "5.0"                  # For finding cache directories
 # Embedding implementations - try both approaches
 fastembed = "4.8.0"           # ONNX-based embeddings (primary)
 governor = "0.6"              # Rate limiting
@@ -36,8 +41,15 @@ html2text = "0.12"            # Convert HTML to markdown
 # JSON-RPC for MCP protocol
 jsonrpc-core = "18.0"
 jsonrpc-derive = "18.0"
+
+# For signal handling
+libc = "0.2"
 regex = "1.11"                # Pattern matching for cleanup
 reqwest = { version = "0.12", features = ["json"] }
+
+# Official MCP SDK
+rmcp = { path = "rust-sdk/crates/rmcp", features = ["server", "macros", "transport-io", "schemars"] }
+schemars = { version = "0.8", features = ["derive"] }
 
 # Web crawling dependencies
 scraper = "0.20"              # HTML parsing and CSS selectors

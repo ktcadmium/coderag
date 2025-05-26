@@ -1,0 +1,64 @@
+version: "3"
+
+vars:
+  BINARY_NAME: coderag-mcp
+  RELEASE_DIR: target/release
+
+env:
+  HF_HUB_USER_AGENT_ORIGIN: "CodeRAG/0.1.0"
+
+tasks:
+  build:
+    desc: Build the project
+    cmds:
+      - cargo build
+
+  release:
+    desc: Build release binary
+    cmds:
+      - cargo build --release --bin {{.BINARY_NAME}}
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - cargo clean
+
+  test:
+    desc: Run all tests
+    cmds:
+      - cargo test
+
+  fmt:
+    desc: Format code
+    cmds:
+      - cargo fmt
+
+  lint:
+    desc: Run clippy linter
+    cmds:
+      - cargo clippy -- -D warnings
+
+  crawl-test:
+    desc: Test crawling functionality
+    cmds:
+      - cargo run --bin {{.BINARY_NAME}} -- crawl https://httpbin.org --verbose
+
+  quick:
+    desc: Quick development check
+    cmds:
+      - cargo fmt
+      - cargo clippy -- -D warnings
+      - cargo build
+
+  pre-commit:
+    desc: Full pre-commit checks
+    cmds:
+      - task: fmt
+      - task: lint
+      - task: test
+      - task: build
+
+  default:
+    desc: Default task
+    cmds:
+      - task: quick
