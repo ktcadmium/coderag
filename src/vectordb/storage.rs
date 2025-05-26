@@ -154,6 +154,40 @@ impl VectorStorage {
         }
     }
 
+    /// Remove all documents from a specific source URL
+    pub fn remove_documents_by_source(&mut self, source_url: &str) -> Result<usize> {
+        let original_len = self.data.entries.len();
+        self.data.entries.retain(|e| e.document.url != source_url);
+
+        let removed_count = original_len - self.data.entries.len();
+        if removed_count > 0 {
+            self.modified = true;
+        }
+
+        Ok(removed_count)
+    }
+
+    /// Remove documents older than specified age in days
+    pub fn remove_documents_by_age(&mut self, max_age_days: u64) -> Result<usize> {
+        use std::time::Duration;
+
+        let cutoff_time = SystemTime::now()
+            .checked_sub(Duration::from_secs(max_age_days * 24 * 60 * 60))
+            .unwrap_or(SystemTime::UNIX_EPOCH);
+
+        let original_len = self.data.entries.len();
+        self.data
+            .entries
+            .retain(|e| e.document.metadata.last_updated.unwrap_or(e.indexed_at) > cutoff_time);
+
+        let removed_count = original_len - self.data.entries.len();
+        if removed_count > 0 {
+            self.modified = true;
+        }
+
+        Ok(removed_count)
+    }
+
     /// Get total number of documents
     pub fn document_count(&self) -> usize {
         self.data.entries.len()

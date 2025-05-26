@@ -81,4 +81,14 @@ impl VectorDatabase {
     pub fn clear(&mut self) -> Result<()> {
         self.storage.clear()
     }
+
+    /// Remove documents from a specific source URL
+    pub fn remove_documents_by_source(&mut self, source_url: &str) -> Result<usize> {
+        self.storage.remove_documents_by_source(source_url)
+    }
+
+    /// Remove documents older than specified age in days
+    pub fn remove_documents_by_age(&mut self, max_age_days: u64) -> Result<usize> {
+        self.storage.remove_documents_by_age(max_age_days)
+    }
 }

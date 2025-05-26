@@ -35,6 +35,17 @@ pub struct CrawlDocsParams {
     pub max_pages: usize,
 }
 
+#[derive(Debug, Deserialize, schemars::JsonSchema)]
+pub struct ManageDocsParams {
+    pub operation: String, // "delete", "expire", or "refresh"
+    pub target: String,    // URL or document ID
+    pub max_age_days: Option<u64>,
+    pub dry_run: Option<bool>,
+    pub crawl_mode: Option<String>,
+    pub crawl_focus: Option<String>,
+    pub max_pages: Option<usize>,
+}
+
 fn default_mode() -> String {
     "single".to_string()
 }
@@ -395,6 +406,186 @@ impl CodeRagServer {
             .map_err(|e| McpError::internal_error(e.to_string(), None))?;
 
         Ok(CallToolResult::success(vec![Content::text(response_json)]))
+    }
+
+    #[tool(
+        description = "Manage documents in the knowledge base with operations like delete, expire, and refresh. Use this tool to maintain knowledge base quality by removing outdated content, cleaning up stale documents, or refreshing specific sources. This consolidates document lifecycle management into a single efficient tool."
+    )]
+    async fn manage_docs(
+        &self,
+        #[tool(aggr)] params: ManageDocsParams,
+    ) -> Result<CallToolResult, McpError> {
+        let ManageDocsParams {
+            operation,
+            target,
+            max_age_days,
+            dry_run,
+            crawl_mode,
+            crawl_focus,
+            max_pages,
+        } = params;
+
+        match operation.as_str() {
+            "delete" => {
+                let mut vector_db = self.vector_db.lock().await;
+                let dry_run = dry_run.unwrap_or(false);
+
+                let deleted_count = if dry_run {
+                    // Count how many would be deleted without actually deleting
+                    let all_sources = vector_db.get_documents_by_source();
+                    all_sources.get(&target).map(|docs| docs.len()).unwrap_or(0)
+                } else {
+                    // Actually delete documents from the specified source
+                    vector_db.remove_documents_by_source(&target).map_err(|e| {
+                        McpError::internal_error(format!("Failed to delete documents: {}", e), None)
+                    })?
+                };
+
+                if !dry_run && deleted_count > 0 {
+                    vector_db.save().map_err(|e| {
+                        McpError::internal_error(format!("Failed to save database: {}", e), None)
+                    })?;
+                }
+
+                let response = json!({
+                    "operation": "delete",
+                    "target": target,
+                    "deleted_documents": deleted_count,
+                    "dry_run": dry_run,
+                    "total_documents_remaining": vector_db.document_count()
+                });
+
+                Ok(CallToolResult::success(vec![Content::text(
+                    serde_json::to_string_pretty(&response)
+                        .map_err(|e| McpError::internal_error(e.to_string(), None))?,
+                )]))
+            }
+            "expire" => {
+                let mut vector_db = self.vector_db.lock().await;
+                let age_days = max_age_days.unwrap_or(90);
+                let dry_run = dry_run.unwrap_or(false);
+
+                let expired_count = if dry_run {
+                    // Count how many would be expired without actually removing them
+                    use std::time::{Duration, SystemTime};
+                    let cutoff_time = SystemTime::now()
+                        .checked_sub(Duration::from_secs(age_days * 24 * 60 * 60))
+                        .unwrap_or(SystemTime::UNIX_EPOCH);
+
+                    vector_db
+                        .get_documents_by_source()
+                        .values()
+                        .flatten()
+                        .filter(|doc| {
+                            doc.metadata.last_updated.unwrap_or(SystemTime::UNIX_EPOCH)
+                                <= cutoff_time
+                        })
+                        .count()
+                } else {
+                    // Actually remove expired documents
+                    vector_db.remove_documents_by_age(age_days).map_err(|e| {
+                        McpError::internal_error(format!("Failed to expire documents: {}", e), None)
+                    })?
+                };
+
+                if !dry_run && expired_count > 0 {
+                    vector_db.save().map_err(|e| {
+                        McpError::internal_error(format!("Failed to save database: {}", e), None)
+                    })?;
+                }
+
+                let response = json!({
+                    "operation": "expire",
+                    "max_age_days": age_days,
+                    "expired_documents": expired_count,
+                    "dry_run": dry_run,
+                    "total_documents_remaining": vector_db.document_count()
+                });
+
+                Ok(CallToolResult::success(vec![Content::text(
+                    serde_json::to_string_pretty(&response)
+                        .map_err(|e| McpError::internal_error(e.to_string(), None))?,
+                )]))
+            }
+            "refresh" => {
+                let mut vector_db = self.vector_db.lock().await;
+                let dry_run = dry_run.unwrap_or(false);
+
+                // First, count/remove existing documents from this source
+                let existing_count = if dry_run {
+                    vector_db
+                        .get_documents_by_source()
+                        .get(&target)
+                        .map(|docs| docs.len())
+                        .unwrap_or(0)
+                } else {
+                    vector_db.remove_documents_by_source(&target).map_err(|e| {
+                        McpError::internal_error(
+                            format!("Failed to remove old documents: {}", e),
+                            None,
+                        )
+                    })?
+                };
+
+                // Release the lock before crawling
+                drop(vector_db);
+
+                let new_documents = if !dry_run {
+                    // Crawl new content to replace the old
+                    let crawl_result = self
+                        .crawl_docs(CrawlDocsParams {
+                            url: target.clone(),
+                            mode: crawl_mode.unwrap_or_else(|| "single".to_string()),
+                            focus: crawl_focus.unwrap_or_else(|| "all".to_string()),
+                            max_pages: max_pages.unwrap_or(1),
+                        })
+                        .await?;
+
+                    // Extract document count from crawl result
+                    if let Some(first_content) = crawl_result.content.first() {
+                        if let Some(text_content) = first_content.raw.as_text() {
+                            if let Ok(crawl_response) =
+                                serde_json::from_str::<serde_json::Value>(&text_content.text)
+                            {
+                                crawl_response
+                                    .get("documents_created")
+                                    .and_then(|v| v.as_u64())
+                                    .unwrap_or(0) as usize
+                            } else {
+                                0
+                            }
+                        } else {
+                            0
+                        }
+                    } else {
+                        0
+                    }
+                } else {
+                    0
+                };
+
+                let response = json!({
+                    "operation": "refresh",
+                    "target": target,
+                    "removed_documents": existing_count,
+                    "new_documents": new_documents,
+                    "dry_run": dry_run,
+                    "net_change": new_documents as i64 - existing_count as i64
+                });
+
+                Ok(CallToolResult::success(vec![Content::text(
+                    serde_json::to_string_pretty(&response)
+                        .map_err(|e| McpError::internal_error(e.to_string(), None))?,
+                )]))
+            }
+            _ => Err(McpError::invalid_params(
+                format!(
+                    "Invalid operation: {}. Must be 'delete', 'expire', or 'refresh'",
+                    operation
+                ),
+                None,
+            )),
+        }
     }
 }
 

@@ -454,3 +454,68 @@ This project demonstrates the value of persistent technical memory:
 ---
 
 **Status**: CodeRAG is now a complete, stable, production-ready documentation RAG system that serves as a foundation for building more sophisticated AI memory systems.
+
+## Critical Scalability & Lifecycle Issues (URGENT - May 26, 2025)
+
+### 🚨 **Immediate Scalability Concerns Identified**
+
+**Document Lifecycle Management - CRITICAL GAP**:
+
+- ❌ No document expiration or freshness tracking
+- ❌ No automatic cleanup of stale content
+- ❌ No way to detect when source documentation changes
+- ❌ Documents persist indefinitely, leading to outdated information
+
+**Vector Storage Scalability - NEEDS ATTENTION**:
+
+- ⚠️ O(n) linear search performance (will degrade with thousands of docs)
+- ⚠️ Full database loaded into memory (memory usage grows linearly)
+- ⚠️ Full database rewrite on every update (inefficient for large datasets)
+- ⚠️ No indexing or optimization for large document collections
+
+**Missing Document Management Tools**:
+
+- ❌ `update_doc` - Update specific documents
+- ❌ `delete_doc` - Remove specific documents
+- ❌ `expire_docs` - Remove stale content based on age
+- ❌ `refresh_doc` - Re-crawl specific URLs
+- ❌ `cleanup_docs` - Remove low-quality or duplicate content
+
+### 📊 **Current Architecture Limitations**
+
+**Memory Usage Projection**:
+
+- Current: ~200 docs = ~50MB memory
+- Projected: 10K docs = ~2.5GB memory (unsustainable)
+- Search time: Currently <10ms, will degrade to seconds with large datasets
+
+**Storage Format Issues**:
+
+```rust
+// Current: All vectors in memory, linear search
+pub fn get_all_entries(&self) -> &[VectorEntry] {
+    &self.data.entries  // Entire dataset loaded
+}
+```
+
+### 🎯 **Urgent Action Items**
+
+1. **Document Lifecycle Tools** (High Priority):
+
+   - Add `delete_doc` tool for removing specific documents
+   - Add `expire_docs` tool with configurable age thresholds
+   - Add `refresh_doc` tool for re-crawling specific URLs
+   - Add automatic staleness detection
+
+2. **Scalability Planning** (Medium Priority):
+
+   - Evaluate migration to proper vector database (Qdrant, Chroma)
+   - Implement incremental updates instead of full rewrites
+   - Add vector indexing for sub-linear search performance
+   - Consider document partitioning by technology/domain
+
+3. **Enhanced Metadata** (Medium Priority):
+   - Track document freshness and update frequency
+   - Add quality scoring and usage analytics
+   - Implement version tracking for documentation changes
+   - Add dependency tracking between related documents
