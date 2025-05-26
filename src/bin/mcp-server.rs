@@ -217,7 +217,7 @@ async fn run_crawler(
 
     // Create crawler
     tracing::info!("🕷️ Creating crawler...");
-    let crawler = Crawler::new(config.clone()).await?;
+    let mut crawler = Crawler::new(config.clone()).await?;
     tracing::info!("✅ Crawler initialized");
 
     // Run crawl with timeout and detailed progress

@@ -14,6 +14,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 - ✅ **Claude Desktop Integration**: Successfully resolved through lazy initialization
 - ✅ **Network Compatibility**: Proper user agent handling for CDN compatibility
 - ✅ **Deployment**: Single binary with automatic model downloading
+- ✅ **AI Optimizations**: Enhanced code extraction, intelligent chunking, content filtering
+- ✅ **Production Ready**: All tests passing, compilation successful, MCP server verified
 
 ## Documentation Structure
 
@@ -46,6 +48,32 @@ Organized test scripts with documentation in `scripts/README.md`
 Historical debugging documentation (preserved for reference)
 
 ## Technical Achievements
+
+### AI-Optimized Documentation Retrieval ✅
+
+**Latest Enhancement**: Transformed from basic content extraction to AI-optimized information retrieval system with enhanced code block extraction, intelligent chunking with overlap, persistent deduplication, and AI-relevant content filtering.
+
+#### Key AI Optimizations
+
+1. **Enhanced Code Block Extraction** (`src/crawler/extractor.rs`)
+
+   - `CodeBlock` struct includes `context`, `usage_example`, and `api_reference` fields
+   - Language detection with heuristic detection for Rust, Python, JavaScript, Java, Bash, SQL, HTML, TypeScript
+   - Context extraction captures surrounding explanatory text from headings and paragraphs
+   - Content categorization identifies usage examples vs API reference documentation
+
+2. **Intelligent Chunking with Overlap** (`src/crawler/chunker.rs`)
+
+   - Overlap functionality with context preservation for conceptual continuity
+   - Forward/backward context extraction for maintaining semantic relationships
+   - Persistent deduplication using `seen_content_hashes` across crawling sessions
+   - Quality content filtering removes navigation and boilerplate text
+
+3. **AI-Relevant Content Filtering**
+   - Content type detection for tutorials, API docs, troubleshooting sections
+   - Navigation removal using comprehensive CSS selectors
+   - Code-focused extraction prioritizing examples and explanations
+   - Quality scoring based on content relevance for AI assistance
 
 ### MCP Integration Success ✅
 
@@ -120,11 +148,14 @@ cargo build --release --bin coderag-mcp
 ```
 mcp-coderag/
 ├── src/                      # Core Rust implementation
-│   ├── embedding_basic.rs    # FastEmbed with lazy initialization
-│   ├── vectordb/            # JSON-based vector database
-│   ├── mcp/                 # MCP server implementation
-│   └── crawler/             # Web crawler with content extraction
-├── tests/                   # Integration test suite
+│   ├── embedding_basic.rs    # FastEmbed with lazy initialization & validation
+│   ├── vectordb/            # JSON-based vector database with metadata
+│   ├── mcp/                 # MCP server implementation (7 tools)
+│   └── crawler/             # AI-optimized web crawler with content extraction
+│       ├── extractor.rs     # Enhanced code block extraction with context
+│       ├── chunker.rs       # Intelligent chunking with overlap & deduplication
+│       └── types.rs         # Document types with AI-relevant metadata
+├── tests/                   # Integration test suite (all passing)
 ├── scripts/                 # Development and test scripts
 ├── memory-bank/            # Project context and learnings
 ├── archive/                # Historical debugging documentation

@@ -17,6 +17,10 @@ path = "src/bin/mcp-server.rs"
 name = "mcp-debug"
 path = "src/bin/mcp-debug.rs"
 
+[features]
+default = []
+advanced-extraction = ["html-extractor", "easy-scraper"]
+
 [dependencies]
 
 # Error handling
@@ -27,16 +31,21 @@ candle-core = "0.9.1"
 candle-nn = "0.9.1"
 candle-transformers = "0.9.1"
 # robotparser = "0.3"         # Conflicts with openssl - TODO: find alternative
-chrono = "0.4"                # Date/time for metadata
+chrono = "0.4" # Date/time for metadata
 
 # CLI parsing (for MCP server binary)
 clap = { version = "4.5", features = ["derive"] }
-dirs = "5.0"                  # For finding cache directories
+dirs = "5.0"                                        # For finding cache directories
+easy-scraper = { version = "0.2", optional = true }
 # Embedding implementations - try both approaches
-fastembed = "4.8.0"           # ONNX-based embeddings (primary)
-governor = "0.6"              # Rate limiting
+fastembed = "4.8.0" # ONNX-based embeddings (primary)
+futures = "0.3"
+governor = "0.6"    # Rate limiting
 hf-hub = "0.3"
-html2text = "0.12"            # Convert HTML to markdown
+
+# Add these optional dependencies for better content extraction
+html-extractor = { version = "1.0", optional = true }
+html2text = "0.12"                                    # Convert HTML to markdown
 
 # JSON-RPC for MCP protocol
 jsonrpc-core = "18.0"
@@ -44,19 +53,29 @@ jsonrpc-derive = "18.0"
 
 # For signal handling
 libc = "0.2"
-regex = "1.11"                # Pattern matching for cleanup
+regex = "1.11"                                      # Pattern matching for cleanup
 reqwest = { version = "0.12", features = ["json"] }
 
 # Official MCP SDK
-rmcp = { path = "rust-sdk/crates/rmcp", features = ["server", "macros", "transport-io", "schemars"] }
+rmcp = { path = "rust-sdk/crates/rmcp", features = [
+    "server",
+    "macros",
+    "transport-io",
+    "schemars",
+] }
 schemars = { version = "0.8", features = ["derive"] }
 
 # Web crawling dependencies
-scraper = "0.20"              # HTML parsing and CSS selectors
+scraper = "0.20" # HTML parsing and CSS selectors
 
 # Serialization
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+shellexpand = "3.1"                                # For expanding ~ in paths
+
+# Add signal handling for graceful shutdown
+signal-hook = "0.3"
+signal-hook-tokio = { version = "0.3", features = ["futures-v0_3"] }
 thiserror = "1.0"
 
 # Tokenizers and model loading
@@ -68,7 +87,7 @@ tokio = { version = "1.0", features = ["full"] }
 # Logging
 tracing = "0.1"
 tracing-subscriber = "0.3"
-url = "2.5"                   # URL parsing and manipulation
+url = "2.5"                # URL parsing and manipulation
 
 # For generating UUIDs
 uuid = { version = "1.10", features = ["v4", "serde"] }

@@ -1,12 +1,29 @@
 use anyhow::{Context, Result};
 use fastembed::{EmbeddingModel, InitOptions, TextEmbedding};
 use std::sync::{Arc, Mutex, Once};
-use tracing::{debug, error, info};
+use tracing::{debug, error, info, warn};
 
 /// Embedding service using FastEmbed with lazy initialization
 pub struct EmbeddingService {
     model: Arc<Mutex<Option<TextEmbedding>>>,
     init_once: Once,
+}
+
+impl Drop for EmbeddingService {
+    fn drop(&mut self) {
+        // Attempt to clean up the model gracefully
+        if let Ok(mut guard) = self.model.try_lock() {
+            if guard.is_some() {
+                debug!("🧹 Cleaning up embedding model...");
+                *guard = None;
+                debug!("✅ Embedding model cleanup completed");
+            }
+        } else {
+            // If we can't acquire the lock, just warn and continue
+            // This prevents the mutex lock failure crash during shutdown
+            warn!("⚠️ Could not acquire lock for embedding model cleanup - continuing shutdown");
+        }
+    }
 }
 
 impl EmbeddingService {
@@ -192,10 +209,23 @@ impl EmbeddingService {
         Ok(all_embeddings)
     }
 
-    /// Get the embedding dimension
+    /// Get the embedding dimension - useful for validation and debugging
     #[allow(dead_code)]
     pub fn dimension(&self) -> usize {
         384 // all-MiniLM-L6-v2 produces 384-dimensional embeddings
+    }
+
+    /// Validate that an embedding has the correct dimensions
+    #[allow(dead_code)]
+    pub fn validate_embedding(&self, embedding: &[f32]) -> anyhow::Result<()> {
+        if embedding.len() != self.dimension() {
+            anyhow::bail!(
+                "Invalid embedding dimension: expected {}, got {}",
+                self.dimension(),
+                embedding.len()
+            );
+        }
+        Ok(())
     }
 }
 

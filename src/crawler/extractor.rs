@@ -1,34 +1,35 @@
 use anyhow::Result;
 use scraper::{Html, Selector};
 
+/// Content extractor for cleaning and extracting main content from HTML
+#[derive(Debug)]
 pub struct ContentExtractor {
-    #[allow(dead_code)]
-    code_selector: Selector,
-    pre_selector: Selector,
+    // CSS selectors for content identification and filtering
+    main_content_selector: Selector,
     article_selector: Selector,
-    main_selector: Selector,
-    #[allow(dead_code)]
+    content_selector: Selector,
     nav_selector: Selector,
-    #[allow(dead_code)]
     footer_selector: Selector,
-    #[allow(dead_code)]
-    script_selector: Selector,
-    #[allow(dead_code)]
-    style_selector: Selector,
+    header_selector: Selector,
+    sidebar_selector: Selector,
+    breadcrumb_selector: Selector,
+    menu_selector: Selector,
 }
 
 impl ContentExtractor {
     pub fn new() -> Result<Self> {
         Ok(Self {
-            code_selector: Selector::parse("code, pre").unwrap(),
-            pre_selector: Selector::parse("pre").unwrap(),
-            article_selector: Selector::parse("article, main, .documentation, .content, .docs")
+            main_content_selector: Selector::parse("main").unwrap(),
+            article_selector: Selector::parse("article, main, .documentation, .content, .docs, .markdown-body, .post-content, .entry-content")
                 .unwrap(),
-            main_selector: Selector::parse("main").unwrap(),
-            nav_selector: Selector::parse("nav, .navigation, .sidebar").unwrap(),
-            footer_selector: Selector::parse("footer").unwrap(),
-            script_selector: Selector::parse("script").unwrap(),
-            style_selector: Selector::parse("style").unwrap(),
+            content_selector: Selector::parse(".content, .docs, .documentation").unwrap(),
+            // Enhanced selectors for content to exclude
+            nav_selector: Selector::parse("nav, .navigation, .navbar, .nav, .menu, .toc, .table-of-contents").unwrap(),
+            footer_selector: Selector::parse("footer, .footer").unwrap(),
+            header_selector: Selector::parse("header, .header, .site-header").unwrap(),
+            sidebar_selector: Selector::parse(".sidebar, .side-nav, .secondary, aside").unwrap(),
+            breadcrumb_selector: Selector::parse(".breadcrumb, .breadcrumbs, .crumbs").unwrap(),
+            menu_selector: Selector::parse(".menu, .dropdown, .submenu").unwrap(),
         })
     }
 
@@ -38,8 +39,8 @@ impl ContentExtractor {
         // Extract title
         let title = self.extract_title(&document);
 
-        // Remove unwanted elements
-        let clean_html = self.remove_unwanted_elements(html);
+        // Remove unwanted elements more thoroughly
+        let clean_html = self.remove_unwanted_elements_advanced(&document);
         let clean_doc = Html::parse_document(&clean_html);
 
         // Try to find main content area
@@ -53,8 +54,8 @@ impl ContentExtractor {
         // Convert to markdown with appropriate width (80 chars default)
         let markdown = html2text::from_read(content_html.as_bytes(), 80);
 
-        // Post-process markdown to clean it up
-        let cleaned_markdown = self.clean_markdown(&markdown);
+        // Post-process markdown to clean it up more thoroughly
+        let cleaned_markdown = self.clean_markdown_advanced(&markdown);
 
         // Extract metadata
         let metadata = self.extract_metadata(&document, url);
@@ -90,82 +91,501 @@ impl ContentExtractor {
         "Untitled Document".to_string()
     }
 
-    fn remove_unwanted_elements(&self, html: &str) -> String {
-        let _document = Html::parse_document(html);
-        let _result = String::new();
+    fn remove_unwanted_elements_advanced(&self, document: &Html) -> String {
+        // Create a new document by cloning the original
+        let mut html = document.html();
+        let mut doc = Html::parse_document(&html);
 
-        // This is a simplified version - in production we'd use a proper HTML parser/modifier
-        // For now, we'll use regex to remove script and style tags
-        let mut clean = html.to_string();
+        // Define comprehensive selectors for unwanted elements
+        let unwanted_selectors = [
+            // Scripts and styles
+            "script",
+            "style",
+            "noscript",
+            // Navigation elements
+            "nav",
+            ".navigation",
+            ".navbar",
+            ".nav",
+            ".menu",
+            ".toc",
+            ".table-of-contents",
+            // Headers and footers
+            "header",
+            ".header",
+            ".site-header",
+            "footer",
+            ".footer",
+            // Sidebars and asides
+            ".sidebar",
+            ".side-nav",
+            ".secondary",
+            "aside",
+            // Breadcrumbs and menus
+            ".breadcrumb",
+            ".breadcrumbs",
+            ".crumbs",
+            ".menu",
+            ".dropdown",
+            ".submenu",
+            // Common boilerplate
+            ".skip-link",
+            ".skip-to-content",
+            ".screen-reader-text",
+            // Social and sharing
+            ".social",
+            ".share",
+            ".sharing",
+            ".social-links",
+            // Advertisements
+            ".ad",
+            ".ads",
+            ".advertisement",
+            ".banner",
+            "[class*='ad-']",
+            "[id*='ad-']",
+            // Comments
+            ".comments",
+            ".comment-section",
+            "#comments",
+            // Related content that's often noisy
+            ".related",
+            ".recommended",
+            ".suggestions",
+            ".more-stories",
+            // Cookie notices and popups
+            ".cookie",
+            ".popup",
+            ".modal",
+            ".overlay",
+            // Search boxes
+            ".search",
+            ".search-box",
+            ".search-form",
+        ];
 
-        // Remove script tags and their content
-        let script_re = regex::Regex::new(r"(?s)<script[^>]*>.*?</script>").unwrap();
-        clean = script_re.replace_all(&clean, "").to_string();
+        // Remove elements by parsing fresh each time to avoid stale references
+        for selector_str in &unwanted_selectors {
+            if let Ok(selector) = Selector::parse(selector_str) {
+                // Collect elements to remove
+                let elements_to_remove: Vec<_> =
+                    doc.select(&selector).map(|el| el.html()).collect();
 
-        // Remove style tags and their content
-        let style_re = regex::Regex::new(r"(?s)<style[^>]*>.*?</style>").unwrap();
-        clean = style_re.replace_all(&clean, "").to_string();
+                // Remove each element by string replacement
+                for element_html in elements_to_remove {
+                    html = html.replace(&element_html, "");
+                }
 
-        // Remove nav elements
-        let nav_re = regex::Regex::new(r"(?s)<nav[^>]*>.*?</nav>").unwrap();
-        clean = nav_re.replace_all(&clean, "").to_string();
+                // Re-parse to get clean DOM
+                doc = Html::parse_document(&html);
+            }
+        }
 
-        // Remove footer elements
-        let footer_re = regex::Regex::new(r"(?s)<footer[^>]*>.*?</footer>").unwrap();
-        clean = footer_re.replace_all(&clean, "").to_string();
+        // Additional cleanup for elements with specific text content
+        self.remove_elements_by_text_content(&mut html);
 
-        clean
+        html
+    }
+
+    fn remove_elements_by_text_content(&self, html: &mut String) {
+        let doc = Html::parse_document(html);
+        let all_elements = Selector::parse("*").unwrap();
+
+        let boilerplate_texts = [
+            "skip to main content",
+            "skip to content",
+            "skip navigation",
+            "toggle navigation",
+            "menu toggle",
+            "search this site",
+            "table of contents",
+            "back to top",
+            "scroll to top",
+        ];
+
+        for element in doc.select(&all_elements) {
+            let text = element.text().collect::<String>().to_lowercase();
+            let trimmed = text.trim();
+
+            // Remove elements that contain only boilerplate text
+            if boilerplate_texts
+                .iter()
+                .any(|&pattern| trimmed.contains(pattern))
+                && trimmed.len() < 50
+            {
+                *html = html.replace(&element.html(), "");
+            }
+
+            // Remove copyright notices
+            if trimmed.starts_with("©") || trimmed.starts_with("copyright") {
+                *html = html.replace(&element.html(), "");
+            }
+        }
     }
 
     fn find_main_content(&self, document: &Html) -> Option<String> {
-        // Try to find the main content area
-        if let Some(article) = document.select(&self.article_selector).next() {
-            return Some(article.html());
+        // Enhanced content extraction for AI assistance - prioritize high-value content
+        let content_selectors = [
+            &self.article_selector,
+            &self.main_content_selector,
+            &self.content_selector,
+        ];
+
+        for selector in &content_selectors {
+            if let Some(element) = document.select(selector).next() {
+                let content = self.filter_ai_relevant_content(&element, document);
+                if !content.trim().is_empty() && content.len() > 100 {
+                    return Some(content);
+                }
+            }
         }
 
-        if let Some(main) = document.select(&self.main_selector).next() {
-            return Some(main.html());
+        // Try additional common content selectors
+        let fallback_selectors = [
+            "#content",
+            "#main-content",
+            ".main-content",
+            ".content-wrapper",
+            ".post-content",
+            ".entry-content",
+            ".markdown-body",
+            ".documentation",
+        ];
+
+        for selector_str in &fallback_selectors {
+            if let Ok(selector) = Selector::parse(selector_str) {
+                if let Some(element) = document.select(&selector).next() {
+                    let content = self.filter_ai_relevant_content(&element, document);
+                    if !content.trim().is_empty() && content.len() > 100 {
+                        return Some(content);
+                    }
+                }
+            }
         }
 
         None
     }
 
+    fn filter_ai_relevant_content(
+        &self,
+        element: &scraper::ElementRef,
+        _document: &Html,
+    ) -> String {
+        // Create a filtered version that removes navigation and focuses on valuable content for AI
+        let mut html = element.html();
+        let doc = Html::parse_document(&html);
+
+        // Remove navigation elements using our selectors
+        let unwanted_selectors = [
+            &self.nav_selector,
+            &self.footer_selector,
+            &self.header_selector,
+            &self.sidebar_selector,
+            &self.breadcrumb_selector,
+            &self.menu_selector,
+        ];
+
+        for selector in &unwanted_selectors {
+            let elements_to_remove: Vec<_> = doc.select(selector).map(|el| el.html()).collect();
+            for element_html in elements_to_remove {
+                html = html.replace(&element_html, "");
+            }
+        }
+
+        // Additional cleanup for AI-focused content
+        let doc = Html::parse_document(&html);
+        let mut valuable_sections = Vec::new();
+
+        // Prioritize sections with code examples and explanations
+        let section_selector = Selector::parse("section, div, article").unwrap();
+        for section in doc.select(&section_selector) {
+            let section_text = section.text().collect::<String>();
+            let section_html = section.html();
+
+            // Include sections that contain code or substantial explanatory content
+            if section_html.contains("<pre")
+                || section_html.contains("<code")
+                || section_html.contains("class=\"highlight\"")
+                || section_text.to_lowercase().contains("example")
+                || section_text.to_lowercase().contains("usage")
+                || section_text.to_lowercase().contains("api")
+                || (section_text.len() > 200
+                    && section_text.chars().filter(|c| c.is_alphabetic()).count()
+                        > section_text.len() / 3)
+            {
+                valuable_sections.push(section_html);
+            }
+        }
+
+        // If we found valuable sections, use them; otherwise return filtered HTML
+        if !valuable_sections.is_empty() {
+            valuable_sections.join("\n")
+        } else {
+            html
+        }
+    }
+
     fn extract_code_blocks(&self, document: &Html) -> Vec<CodeBlock> {
         let mut code_blocks = Vec::new();
 
-        // Extract <pre> blocks (usually contain code)
-        for element in document.select(&self.pre_selector) {
+        // Enhanced code block extraction for AI assistance
+        let code_selector =
+            Selector::parse("pre code, pre, .highlight, .codehilite, .code-block").unwrap();
+        for element in document.select(&code_selector) {
             let code = element.text().collect::<String>();
-            let language = element
-                .value()
-                .classes()
-                .find(|class| class.starts_with("language-"))
-                .map(|class| class.trim_start_matches("language-").to_string());
+
+            // Skip very short code snippets that aren't useful for AI assistance
+            if code.trim().len() < 10 {
+                continue;
+            }
+
+            let language = self.detect_code_language(&element, &code);
+            let context = self.extract_code_context(&element);
+            let usage_example = self.is_usage_example(&element);
+            let api_reference = self.is_api_reference(&element);
 
             code_blocks.push(CodeBlock {
                 code: code.trim().to_string(),
                 language,
+                context: if context.is_empty() {
+                    None
+                } else {
+                    Some(context)
+                },
+                usage_example,
+                api_reference,
             });
         }
 
         code_blocks
     }
 
-    fn clean_markdown(&self, markdown: &str) -> String {
+    fn detect_code_language(
+        &self,
+        element: &scraper::ElementRef,
+        code_text: &str,
+    ) -> Option<String> {
+        // Try class attribute first (most reliable)
+        if let Some(class) = element.value().attr("class") {
+            if let Some(lang) = class.split("language-").nth(1) {
+                return Some(lang.split_whitespace().next()?.to_string());
+            }
+            if let Some(lang) = class.split("lang-").nth(1) {
+                return Some(lang.split_whitespace().next()?.to_string());
+            }
+            if let Some(lang) = class.split("highlight-").nth(1) {
+                return Some(lang.split_whitespace().next()?.to_string());
+            }
+        }
+
+        // Try data attributes
+        if let Some(lang) = element.value().attr("data-lang") {
+            return Some(lang.to_string());
+        }
+        if let Some(lang) = element.value().attr("data-language") {
+            return Some(lang.to_string());
+        }
+
+        // Heuristic detection for common patterns (important for AI assistance)
+        let code_lower = code_text.to_lowercase();
+        if code_lower.contains("fn main()")
+            || code_lower.contains("use std::")
+            || code_lower.contains("cargo ")
+        {
+            Some("rust".to_string())
+        } else if code_lower.contains("def ")
+            || code_lower.contains("import ")
+            || code_lower.contains("pip ")
+        {
+            Some("python".to_string())
+        } else if code_lower.contains("function ")
+            || code_lower.contains("const ")
+            || code_lower.contains("npm ")
+            || code_lower.contains("yarn ")
+        {
+            Some("javascript".to_string())
+        } else if code_lower.contains("public class") || code_lower.contains("import java") {
+            Some("java".to_string())
+        } else if code_lower.contains("curl ")
+            || code_lower.contains("wget ")
+            || code_lower.contains("sudo ")
+        {
+            Some("bash".to_string())
+        } else if code_lower.contains("select ")
+            || code_lower.contains("insert ")
+            || code_lower.contains("create table")
+        {
+            Some("sql".to_string())
+        } else if code_lower.contains("<!doctype") || code_lower.contains("<html") {
+            Some("html".to_string())
+        } else if code_lower.contains("interface ")
+            || code_lower.contains("type ") && code_lower.contains("=")
+        {
+            Some("typescript".to_string())
+        } else {
+            None
+        }
+    }
+
+    fn extract_code_context(&self, element: &scraper::ElementRef) -> String {
+        let mut context_parts = Vec::new();
+
+        // Look for preceding explanatory text in parent elements
+        let mut current = element.parent();
+        let mut depth = 0;
+
+        while let Some(parent) = current {
+            if depth > 2 {
+                break;
+            } // Don't go too far up
+
+            if let Some(parent_elem) = scraper::ElementRef::wrap(parent) {
+                // Look for headings that provide context
+                let heading_selector = Selector::parse("h1, h2, h3, h4, h5, h6").unwrap();
+                for heading in parent_elem.select(&heading_selector) {
+                    let heading_text = heading.text().collect::<String>().trim().to_string();
+                    if !heading_text.is_empty() && heading_text.len() < 100 {
+                        context_parts.push(format!("Section: {}", heading_text));
+                        break; // Only take the first relevant heading
+                    }
+                }
+
+                // Look for preceding paragraphs with explanatory text
+                let p_selector = Selector::parse("p").unwrap();
+                for para in parent_elem.select(&p_selector) {
+                    let para_text = para.text().collect::<String>().trim().to_string();
+                    if para_text.len() > 30 && para_text.len() < 300 {
+                        // Check if this paragraph explains the code
+                        let para_lower = para_text.to_lowercase();
+                        if para_lower.contains("example")
+                            || para_lower.contains("usage")
+                            || para_lower.contains("how to")
+                            || para_lower.contains("following")
+                            || para_lower.contains("this code")
+                            || para_lower.contains("you can")
+                        {
+                            context_parts.push(para_text);
+                            if context_parts.len() >= 2 {
+                                break;
+                            } // Limit context size
+                        }
+                    }
+                }
+            }
+
+            current = parent.parent();
+            depth += 1;
+        }
+
+        context_parts.join(" | ")
+    }
+
+    fn is_usage_example(&self, element: &scraper::ElementRef) -> bool {
+        // Check surrounding text for usage example indicators
+        let surrounding_text = self.get_surrounding_text(element).to_lowercase();
+
+        surrounding_text.contains("example")
+            || surrounding_text.contains("usage")
+            || surrounding_text.contains("how to")
+            || surrounding_text.contains("getting started")
+            || surrounding_text.contains("quick start")
+            || surrounding_text.contains("tutorial")
+            || surrounding_text.contains("demo")
+    }
+
+    fn is_api_reference(&self, element: &scraper::ElementRef) -> bool {
+        // Check if this appears to be API reference documentation
+        let surrounding_text = self.get_surrounding_text(element).to_lowercase();
+
+        surrounding_text.contains("api")
+            || surrounding_text.contains("reference")
+            || surrounding_text.contains("method")
+            || surrounding_text.contains("function")
+            || surrounding_text.contains("parameter")
+            || surrounding_text.contains("return")
+            || surrounding_text.contains("endpoint")
+    }
+
+    fn get_surrounding_text(&self, element: &scraper::ElementRef) -> String {
+        // Get text from parent and sibling elements for context analysis
+        let mut text_parts = Vec::new();
+
+        if let Some(parent) = element.parent().and_then(scraper::ElementRef::wrap) {
+            let parent_text = parent.text().collect::<String>();
+            if parent_text.len() < 500 {
+                // Avoid very large text blocks
+                text_parts.push(parent_text);
+            }
+        }
+
+        text_parts.join(" ")
+    }
+
+    fn clean_markdown_advanced(&self, markdown: &str) -> String {
         let mut cleaned = markdown.to_string();
 
-        // Remove excessive blank lines
-        let blank_line_re = regex::Regex::new(r"\n{3,}").unwrap();
-        cleaned = blank_line_re.replace_all(&cleaned, "\n\n").to_string();
+        // Remove excessive blank lines using string operations instead of regex
+        while cleaned.contains("\n\n\n") {
+            cleaned = cleaned.replace("\n\n\n", "\n\n");
+        }
 
-        // Clean up code blocks
-        let code_block_re = regex::Regex::new(r"```\s*\n").unwrap();
-        cleaned = code_block_re.replace_all(&cleaned, "```\n").to_string();
+        // Remove navigation-like patterns that made it through
+        let nav_patterns = [
+            "| |", // Empty table cells
+            "* |", // Navigation bullets
+            "Navigation",
+            "Table of Contents",
+            "Skip to",
+            "Toggle",
+            "Menu",
+            "index | modules | next | previous |",
+        ];
+
+        // Filter lines to remove navigation patterns
+        let lines: Vec<&str> = cleaned.lines().collect();
+        let filtered_lines: Vec<&str> = lines
+            .into_iter()
+            .filter(|line| {
+                let trimmed = line.trim();
+
+                // Keep lines that have substantial content
+                if trimmed.len() < 3 {
+                    return false;
+                }
+
+                // Check for navigation patterns
+                let lower_line = trimmed.to_lowercase();
+                for pattern in &nav_patterns {
+                    if lower_line.contains(&pattern.to_lowercase()) && trimmed.len() < 50 {
+                        return false;
+                    }
+                }
+
+                // Skip lines that are mostly punctuation
+                let punct_count = trimmed.chars().filter(|c| c.is_ascii_punctuation()).count();
+                let alpha_count = trimmed.chars().filter(|c| c.is_alphabetic()).count();
+
+                // Keep if more alphabetic than punctuation, or if it's a code line
+                alpha_count > punct_count
+                    || trimmed.contains("def ")
+                    || trimmed.contains("function")
+                    || trimmed.contains("class ")
+            })
+            .collect();
+
+        cleaned = filtered_lines.join("\n");
+
+        // Clean up code blocks - simple string replacement
+        cleaned = cleaned.replace("``` \n", "```\n");
+        cleaned = cleaned.replace("```  \n", "```\n");
+
+        // Final cleanup - remove excessive blank lines again
+        while cleaned.contains("\n\n\n") {
+            cleaned = cleaned.replace("\n\n\n", "\n\n");
+        }
 
         // Trim whitespace
-        cleaned = cleaned.trim().to_string();
-
-        cleaned
+        cleaned.trim().to_string()
     }
 
     fn extract_metadata(&self, document: &Html, url: &str) -> ContentMetadata {
@@ -260,6 +680,9 @@ pub struct ExtractedContent {
 pub struct CodeBlock {
     pub code: String,
     pub language: Option<String>,
+    pub context: Option<String>, // Surrounding explanatory text for AI understanding
+    pub usage_example: bool,     // Whether this appears to be a usage example
+    pub api_reference: bool,     // Whether this is API documentation code
 }
 
 #[derive(Debug, Clone)]

@@ -284,7 +284,7 @@ impl CodeRagServer {
 
         // Chunk the content
         info!("Creating text chunker...");
-        let chunker = crate::crawler::TextChunker::new();
+        let mut chunker = crate::crawler::TextChunker::new();
         info!("Chunking text...");
         let chunks = chunker.chunk_text(&extracted.markdown);
         info!("Created {} chunks", chunks.len());

@@ -70,7 +70,7 @@ impl Crawler {
     }
 
     pub async fn crawl(
-        &self,
+        &mut self,
         embedding_service: &EmbeddingService,
         vector_db: &mut VectorDatabase,
     ) -> Result<Vec<String>> {
@@ -149,7 +149,7 @@ impl Crawler {
     }
 
     async fn crawl_page(
-        &self,
+        &mut self,
         url: &str,
         _depth: usize,
         embedding_service: &EmbeddingService,

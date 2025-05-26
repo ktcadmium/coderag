@@ -28,7 +28,7 @@ async fn test_single_page_crawl() {
     };
 
     // Create crawler
-    let crawler = Crawler::new(config).await.unwrap();
+    let mut crawler = Crawler::new(config).await.unwrap();
 
     // Run crawl
     let result = crawler.crawl(&embedding_service, &mut vector_db).await;
