@@ -1,342 +1,120 @@
-# CodeRAG Active Context
+# CodeRAG Active Development Context
 
-## Current Status: ✅ PRODUCTION READY - AI OPTIMIZED
+**Last Updated**: May 26, 2025
+**Current Status**: ✅ PRODUCTION READY WITH ENHANCED AI ASSISTANT AUTONOMY
 
-**Branch**: `main` (stable)
-**Status**: Complete, AI-optimized documentation RAG system with enhanced code extraction, intelligent chunking, and successful Claude Desktop integration
+## Current Session Focus: AI Assistant Autonomy & Tool Effectiveness
 
-## Recent Breakthroughs Completed ✅
+### 🎯 **Major Breakthrough Achieved**
 
-### 🎯 **All Critical Issues Resolved + AI Optimizations**
+**Enhanced MCP Tool Descriptions for AI Assistant Autonomy**: Successfully transformed CodeRAG from a basic documentation tool into a clear, autonomous resource for AI assistants, matching the clarity and guidance of Anthropic's sequential thinking tool.
 
-1. **✅ AI-Optimized Content Extraction (LATEST)**
+### 🚀 **Latest Accomplishments (May 26, 2025)**
 
-   - Enhanced code block extraction with context, usage examples, and API reference categorization
-   - Language detection for Rust, Python, JavaScript, Java, Bash, SQL, HTML, TypeScript
-   - Context extraction from surrounding headings and explanatory text
-   - Content type detection for tutorials, API docs, troubleshooting sections
+1. **✅ Tool Description Enhancement**:
 
-2. **✅ Intelligent Chunking with Overlap**
+   - Rewritten all MCP tool descriptions to provide clear guidance on when and how to use
+   - Emphasized AI assistant autonomy and proactive usage
+   - Made it clear this is the AI assistant's tool, not for developers
+   - Added specific use case scenarios and guidance
 
-   - Overlap functionality with forward/backward context preservation
-   - Persistent deduplication using `seen_content_hashes` across sessions
-   - Quality content filtering removes navigation and boilerplate text
-   - Semantic relationship maintenance between chunks
+2. **✅ Knowledge Base Expansion**:
 
-3. **✅ Lazy Initialization Implementation**
+   - Expanded from 96 to 199 documents (doubled the knowledge base)
+   - Added React documentation (56 documents) for frontend development
+   - Added Node.js File System API (33 documents) for backend JavaScript
+   - Added Django tutorial (14 documents) for Python web frameworks
+   - Verified content quality improvements with actual code examples
 
-   - Solved MCP sandbox restrictions with elegant lazy loading pattern
-   - Server starts instantly (< 1 second vs 1-2 minutes)
-   - Model downloads automatically on first search request
-   - No manual initialization required
+3. **✅ Autonomous Usage Demonstration**:
+   - Successfully demonstrated AI assistant autonomy by proactively crawling documentation
+   - Verified improved search results with complete code examples
+   - Confirmed broken reference issues are from older indexed content
+   - Validated that new crawling produces clean, high-quality content
 
-4. **✅ Database Path Fix**
+### 🔧 **Technical Implementation Details**
 
-   - Corrected file vs directory path handling
-   - Database saves and loads reliably with atomic operations
-   - Fixed "Is a directory (os error 21)" error
+**Updated Tool Descriptions**:
 
-5. **✅ Network Compatibility**
+- `search_docs`: Emphasizes proactive usage for current programming information
+- `crawl_docs`: Grants full autonomy to crawl documentation sites as needed
+- `list_docs`: Guides checking available knowledge before searching
+- `reload_docs`: Explains when to refresh the database
 
-   - Resolved CDN compatibility with proper user agent
-   - Set `HF_HUB_USER_AGENT_ORIGIN="CodeRAG/0.1.0"`
-   - Model downloads work reliably from all sources
+**Server Instructions**: Completely rewritten to emphasize AI assistant autonomy and proactive tool usage.
 
-6. **✅ Development Workflow**
-   - Complete Taskfile.yml with automated workflows
-   - Comprehensive linting and testing
-   - Real-world integration testing
+### 📊 **Current Knowledge Base Status**
 
-## Technical Architecture (STABLE)
+**Total Documents**: 199 (up from 96)
+**Key Technologies Covered**:
 
-### Core Components Status
+- **CrewAI**: 67 documents (original focus)
+- **React**: 56 documents (frontend development)
+- **Node.js**: 33 documents (backend JavaScript)
+- **Django**: 14 documents (Python web framework)
+- **FastAPI**: 15 documents (Python API framework)
+- **Python Standard Library**: 14 documents (core Python)
 
-- ✅ **FastEmbed Integration**: all-MiniLM-L6-v2 (384 dimensions) with lazy loading & validation
-- ✅ **Vector Database**: JSON-based storage with atomic writes & rich metadata
-- ✅ **AI-Optimized Web Crawler**: Enhanced code extraction, intelligent chunking with overlap
-- ✅ **Content Processing**: Language detection, context extraction, quality filtering
-- ✅ **MCP Server**: Full protocol implementation with robust error handling (7 tools)
-- ✅ **Performance**: 2-5ms embedding generation, <10ms search
-- ✅ **Network Compatibility**: Proper user agent handling for CDN access
-- ✅ **Data Persistence**: Atomic saves with temp file + rename pattern
-- ✅ **Deduplication**: Persistent content hash tracking across sessions
+**Content Quality**: Significantly improved with proper code examples and context preservation.
 
-### MCP Tools (PRODUCTION READY)
+### 🎯 **Immediate Next Steps**
 
-- `search_docs` - Semantic documentation search with filtering
-- `list_docs` - Show indexed sources and document counts
-- `crawl_docs` - Index new documentation with smart chunking (single-page mode)
-- `reload_docs` - Refresh database from disk
+1. **Content Quality Improvements**:
 
-### Claude Desktop Integration (WORKING)
+   - Fix broken reference patterns (`][85][`) from older indexed content
+   - Implement better HTML-to-markdown conversion
+   - Add post-processing cleanup for malformed references
 
-**Configuration**:
+2. **Multi-Page Crawling**:
 
-```json
-{
-  "mcpServers": {
-    "coderag": {
-      "command": "/path/to/coderag-mcp",
-      "args": [],
-      "env": {
-        "HF_HUB_USER_AGENT_ORIGIN": "CodeRAG/0.1.0"
-      }
-    }
-  }
-}
-```
+   - Implement full multi-page crawling (currently single-page only)
+   - Add smart depth limits and sitemap parsing
+   - Enable comprehensive documentation coverage
 
-**User Experience**:
+3. **Proactive Knowledge Gap Detection**:
+   - Track search queries to identify missing technologies
+   - Automatically suggest documentation sources to crawl
+   - Implement knowledge gap alerts for AI assistants
 
-1. Server starts instantly when Claude needs it
-2. Model downloads automatically on first search (1-2 minutes)
-3. Subsequent searches are instant (<10ms)
-4. All tools available and working reliably
+### 🧠 **Key Insights for AI Assistant Effectiveness**
 
-## Development Workflow (AUTOMATED)
+1. **Tool Description Clarity**: Clear, scenario-based descriptions dramatically improve AI assistant understanding and usage
+2. **Autonomy Emphasis**: Explicitly stating autonomy encourages proactive tool usage
+3. **Content Quality Matters**: Clean, complete code examples are essential for coding assistance
+4. **Knowledge Base Diversity**: Broader technology coverage significantly improves utility
+5. **Continuous Learning**: AI assistants should proactively expand their knowledge base
 
-### Taskfile Commands
+### 🔮 **Future Vision Implementation**
 
-```bash
-task                    # Quick check (format, lint, build)
-task release           # Build release binary
-task crawl-test        # Test crawling functionality
-task --list           # See all available tasks
-```
+**Comprehensive Roadmap Added**: Detailed 18-point improvement plan covering:
 
-### Key Features
+- Immediate high-impact fixes (content quality, multi-page crawling)
+- AI assistant autonomy enhancements (gap detection, smart crawling)
+- Content intelligence & analytics (usage tracking, freshness management)
+- Advanced technical features (multi-model embeddings, semantic chunking)
+- Integration & ecosystem enhancements (streaming, batch operations)
+- Specialized use cases (domain-specific optimizations, code generation)
 
-- Automatic environment variable setup
-- Comprehensive linting and formatting
-- Integration testing with real websites
-- Release binary management
+**Ultimate Goal**: Transform CodeRAG into a fully autonomous AI knowledge assistant that proactively learns, anticipates needs, and provides contextual guidance.
 
-## Architectural Patterns Established
+### 🛠️ **Development Environment**
 
-### 1. Lazy Initialization Pattern
+**Current Branch**: `improve-mcp-tool-descriptions`
+**Status**: Ready for merge - all improvements implemented and tested
+**Build Status**: ✅ Compiles successfully with `cargo build --release`
+**Integration**: ✅ Working with both Cursor IDE and Claude Desktop
 
-```rust
-use std::sync::{Arc, Mutex, Once};
+### 📝 **Memory Bank Updates**
 
-pub struct EmbeddingService {
-    model: Arc<Mutex<Option<fastembed::TextEmbedding>>>,
-    init_once: Once,
-}
+**Progress.md**: Updated with complete autonomy enhancement details and comprehensive future roadmap
+**ActiveContext.md**: This file - reflects current state and immediate next steps
 
-// Model downloads on first tool call, not during startup
-fn ensure_initialized(&self) -> Result<()> {
-    self.init_once.call_once(|| {
-        // Model download happens here, during runtime
-    });
-}
-```
+### 🎯 **Success Metrics Achieved**
 
-**Benefits**:
+- **Tool Clarity**: AI assistants now understand when and how to use CodeRAG
+- **Autonomous Usage**: Demonstrated successful proactive knowledge base expansion
+- **Content Quality**: Verified clean code examples and proper context preservation
+- **Knowledge Coverage**: Doubled the knowledge base with essential web development technologies
+- **Integration Stability**: Confirmed working across multiple AI assistant platforms
 
-- Fast startup times
-- Sandbox compatibility
-- Resource efficiency
-- Error isolation
-
-### 2. Atomic Data Operations
-
-```rust
-// Atomic save pattern
-fn save(&self) -> Result<()> {
-    let temp_path = self.path.with_extension("tmp");
-    std::fs::write(&temp_path, &data)?;
-    std::fs::rename(temp_path, &self.path)?;
-    Ok(())
-}
-```
-
-**Benefits**:
-
-- Data integrity
-- Crash safety
-- Concurrent access safety
-
-### 3. Error Context Propagation
-
-```rust
-use anyhow::{Context, Result};
-
-fn operation() -> Result<()> {
-    some_operation()
-        .with_context(|| format!("Failed to process: {}", item))?;
-    Ok(())
-}
-```
-
-## Production Metrics (ACHIEVED)
-
-### Performance Benchmarks
-
-- **Server Startup**: < 1 second ✅
-- **First Search**: 1-2 minutes ✅ (model download + search)
-- **Subsequent Searches**: < 10ms ✅
-- **Embedding Generation**: 2-5ms ✅
-- **Model Loading**: ~4ms ✅ (after initial download)
-- **Memory Usage**: ~200MB ✅
-- **Binary Size**: ~15MB ✅
-
-### Reliability Metrics
-
-- **Database Operations**: 100% success rate with atomic writes
-- **Network Compatibility**: Works with major CDNs (tested)
-- **Error Recovery**: Graceful handling of network/filesystem issues
-- **Memory Safety**: Zero memory leaks (Rust ownership model)
-- **Concurrent Access**: Thread-safe with Arc<Mutex<T>> patterns
-
-## Key Technical Insights Learned
-
-### MCP Server Behavior (VALIDATED)
-
-1. **Startup Sandbox**: MCP servers run in restricted environments during initialization
-2. **Runtime Permissions**: Full file system access available during tool execution
-3. **Lazy Loading**: Best practice for expensive resource initialization
-4. **Error Propagation**: Proper MCP error codes essential for debugging
-
-### Network Compatibility (PROVEN)
-
-1. **User Agent Importance**: CDNs reject requests with generic/missing user agents
-2. **Environment Variables**: Standard way to configure network behavior
-3. **Retry Logic**: Handle transient network failures gracefully
-
-### Performance Optimization (IMPLEMENTED)
-
-1. **Model Caching**: FastEmbed models cache efficiently after first load
-2. **Vector Operations**: Cosine similarity is fast for 384-dimensional vectors
-3. **JSON Storage**: Sufficient for typical documentation collections
-4. **Memory Management**: Rust's ownership model prevents memory leaks
-
-## Current Capabilities
-
-### Working Features ✅
-
-- **Semantic Search**: Fast, accurate documentation search
-- **Single-page Crawling**: Extract and index documentation pages
-- **Claude Desktop Integration**: Full MCP protocol support
-- **Automatic Model Management**: Lazy loading with caching
-- **Robust Error Handling**: Graceful failure recovery
-- **Development Workflow**: Automated testing and building
-
-### Limitations (By Design)
-
-- **Multi-page Crawling**: Currently single-page mode in MCP context
-- **Document Management**: No individual document add/remove tools yet
-- **Progress Indicators**: No real-time crawl progress (logs only)
-
-## Future Development Roadmap
-
-### Memory System Foundation (NEXT PHASE)
-
-**Short-term Memory**:
-
-- Recent conversation context and decisions
-- Session patterns and user preferences
-- Temporary working memory for complex tasks
-
-**Medium-term Memory**:
-
-- Project-specific knowledge and patterns
-- User interaction history and preferences
-- Learned optimization strategies
-
-**Long-term Memory**:
-
-- Persistent knowledge base across sessions
-- Architectural patterns and best practices
-- Cross-project insights and learnings
-
-### Technical Enhancements
-
-- [ ] Progress indicators for first-time model download
-- [ ] Multi-page crawling in MCP context
-- [ ] Document management tools (add/remove individual docs)
-- [ ] Background model warming optimization
-- [ ] Multiple embedding model support
-
-## Important Patterns for Future Reference
-
-### MCP Tool Response Format
-
-```rust
-// Standard MCP tool response
-Ok(CallToolResult::success(vec![Content::text(
-    serde_json::to_string_pretty(&response)?
-)]))
-```
-
-### Database Path Handling
-
-```rust
-// Always use file paths, not directory paths
-let db_path = data_dir.join("coderag_vectordb.json");
-let mut vector_db = VectorDatabase::new(&db_path)?;
-```
-
-### Environment Configuration
-
-```bash
-# Required for network compatibility
-export HF_HUB_USER_AGENT_ORIGIN="CodeRAG/0.1.0"
-```
-
-## Project Success Validation
-
-### Technical Success ✅
-
-- **Server starts in < 1 second** (achieved)
-- **No manual initialization required** (achieved)
-- **Sandbox compatibility** (achieved)
-- **Performance targets met** (achieved)
-- **Network compatibility** (achieved)
-- **Data persistence reliability** (achieved)
-
-### User Experience Success ✅
-
-- **Zero-configuration setup** (achieved)
-- **Fast feedback loops** (achieved)
-- **Intuitive first-use experience** (achieved)
-- **Reliable operation** (achieved)
-- **Claude Desktop integration** (achieved)
-
-### Production Readiness ✅
-
-- **Single binary deployment** (achieved)
-- **Automatic dependency management** (achieved)
-- **Robust error handling** (achieved)
-- **Comprehensive testing** (achieved)
-- **Documentation complete** (achieved)
-
-## Memory System Implications
-
-This project demonstrates the value of persistent technical memory:
-
-- **Architectural Decisions**: Capture rationale and context
-- **Problem-Solving Patterns**: Document what works
-- **Environment Gotchas**: Record environment-specific issues
-- **Performance Insights**: Preserve optimization strategies
-- **Integration Patterns**: Document successful integration approaches
-
-**The success of CodeRAG validates the approach of building AI memory systems that can capture, organize, and retrieve technical knowledge for future development cycles.**
-
-## Next Steps
-
-### Immediate (READY)
-
-- ✅ System is production-ready for Claude Desktop use
-- ✅ All core functionality working reliably
-- ✅ Documentation complete and current
-
-### Future Memory System Development
-
-- Build on CodeRAG foundation for advanced memory capabilities
-- Implement short, medium, and long-term memory layers
-- Add context-aware memory retrieval and consolidation
-- Create memory sharing protocols between AI assistants
-
----
-
-**Status**: CodeRAG is now a complete, stable, production-ready documentation RAG system that serves as a foundation for building more sophisticated AI memory systems.
+**CodeRAG is now positioned as a foundational tool for AI assistant autonomy in coding assistance, with a clear roadmap for becoming a fully autonomous AI knowledge assistant.**
