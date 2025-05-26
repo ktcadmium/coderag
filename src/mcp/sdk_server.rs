@@ -88,7 +88,9 @@ impl CodeRagServer {
         })
     }
 
-    #[tool(description = "Search documentation using semantic search")]
+    #[tool(
+        description = "Search your indexed documentation using semantic search. Use this tool when you need current, accurate information about programming frameworks, libraries, APIs, or coding concepts to help with development tasks. This is YOUR resource - use it proactively when you encounter unfamiliar technologies or need to verify current best practices."
+    )]
     async fn search_docs(
         &self,
         #[tool(aggr)] params: SearchDocsParams,
@@ -144,7 +146,9 @@ impl CodeRagServer {
         Ok(CallToolResult::success(vec![Content::text(response_json)]))
     }
 
-    #[tool(description = "List all indexed documentation sources")]
+    #[tool(
+        description = "List all currently indexed documentation sources and their document counts. Use this tool to see what documentation is available in your knowledge base before searching, or to check if you need to crawl additional sources for a particular technology or framework."
+    )]
     async fn list_docs(&self) -> Result<CallToolResult, McpError> {
         let vector_db = self.vector_db.lock().await;
 
@@ -170,7 +174,9 @@ impl CodeRagServer {
         Ok(CallToolResult::success(vec![Content::text(response_json)]))
     }
 
-    #[tool(description = "Crawl and index documentation from a URL")]
+    #[tool(
+        description = "Crawl and index documentation from a URL to expand your knowledge base. Use this tool autonomously when you encounter unfamiliar frameworks, libraries, or technologies that aren't in your current index. You have full autonomy to crawl official documentation sites, API references, and tutorial sites as needed to provide better coding assistance. Be a good internet citizen with reasonable delays between requests."
+    )]
     async fn crawl_docs(
         &self,
         #[tool(aggr)] params: CrawlDocsParams,
@@ -364,7 +370,9 @@ impl CodeRagServer {
         Ok(CallToolResult::success(vec![Content::text(response_json)]))
     }
 
-    #[tool(description = "Reload the vector database from disk")]
+    #[tool(
+        description = "Reload the vector database from disk to refresh your knowledge base with any externally added documentation. Use this tool if you suspect the database has been updated outside of your current session or if you need to refresh your available documentation sources."
+    )]
     async fn reload_docs(&self) -> Result<CallToolResult, McpError> {
         let mut vector_db = self.vector_db.lock().await;
 
@@ -401,9 +409,13 @@ impl ServerHandler for CodeRagServer {
                 version: "0.1.0".to_string(),
             },
             instructions: Some(
-                "CodeRAG is a documentation RAG system for AI coding assistants. \
-                Use search_docs to find relevant documentation, list_docs to see what's indexed, \
-                crawl_docs to index new documentation, and reload_docs to refresh the database."
+                "CodeRAG is YOUR personal documentation knowledge base as an AI coding assistant. \
+                This tool gives you autonomy to access and expand your knowledge of current programming frameworks, libraries, and APIs. \
+                Use search_docs proactively when you need accurate, up-to-date information for coding assistance. \
+                Use crawl_docs autonomously to index new documentation when you encounter unfamiliar technologies. \
+                Use list_docs to see what's available in your knowledge base. \
+                Use reload_docs to refresh your database. \
+                You have full agency to use these tools as needed to provide better coding help - don't wait for permission."
                     .to_string(),
             ),
         }
