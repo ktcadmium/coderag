@@ -1,28 +1,17 @@
 use anyhow::{Context, Result};
 use fastembed::{EmbeddingModel, InitOptions, TextEmbedding};
-use std::sync::{Arc, Mutex, Once};
-use tracing::{debug, error, info, warn};
+use tokio::sync::OnceCell;
+use tracing::{debug, error, info};
 
 /// Embedding service using FastEmbed with lazy initialization
 pub struct EmbeddingService {
-    model: Arc<Mutex<Option<TextEmbedding>>>,
-    init_once: Once,
+    model: OnceCell<TextEmbedding>,
 }
 
 impl Drop for EmbeddingService {
     fn drop(&mut self) {
-        // Attempt to clean up the model gracefully
-        if let Ok(mut guard) = self.model.try_lock() {
-            if guard.is_some() {
-                debug!("🧹 Cleaning up embedding model...");
-                *guard = None;
-                debug!("✅ Embedding model cleanup completed");
-            }
-        } else {
-            // If we can't acquire the lock, just warn and continue
-            // This prevents the mutex lock failure crash during shutdown
-            warn!("⚠️ Could not acquire lock for embedding model cleanup - continuing shutdown");
-        }
+        debug!("🧹 Cleaning up embedding model...");
+        debug!("✅ Embedding model cleanup completed");
     }
 }
 
@@ -34,65 +23,48 @@ impl EmbeddingService {
         info!("💡 Model will be downloaded on first use (~90MB, 1-2 minutes)");
 
         Ok(Self {
-            model: Arc::new(Mutex::new(None)),
-            init_once: Once::new(),
+            model: OnceCell::new(),
         })
     }
 
     /// Ensure the model is initialized (download and load if needed)
-    fn ensure_initialized(&self) -> Result<()> {
-        let mut init_result = Ok(());
+    async fn ensure_initialized(&self) -> Result<&TextEmbedding> {
+        self.model
+            .get_or_try_init(|| async {
+                info!("🔄 First embedding request - initializing FastEmbed model...");
+                info!("📥 Downloading all-MiniLM-L6-v2 model (~90MB)...");
+                info!("⏳ This may take 1-2 minutes on first run...");
 
-        self.init_once.call_once(|| {
-            info!("🔄 First embedding request - initializing FastEmbed model...");
-            info!("📥 Downloading all-MiniLM-L6-v2 model (~90MB)...");
-            info!("⏳ This may take 1-2 minutes on first run...");
+                // Set cache directory
+                let cache_dir = std::env::var("FASTEMBED_CACHE_PATH")
+                    .map(std::path::PathBuf::from)
+                    .unwrap_or_else(|_| {
+                        let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
+                        std::path::PathBuf::from(format!("{}/.cache/fastembed", home))
+                    });
 
-            // Set cache directory
-            let cache_dir = std::env::var("FASTEMBED_CACHE_PATH")
-                .map(std::path::PathBuf::from)
-                .unwrap_or_else(|_| {
-                    let home = std::env::var("HOME").unwrap_or_else(|_| ".".to_string());
-                    std::path::PathBuf::from(format!("{}/.cache/fastembed", home))
-                });
+                info!("📂 Using cache directory: {:?}", cache_dir);
 
-            info!("📂 Using cache directory: {:?}", cache_dir);
+                // Try to initialize the model with better error handling
+                let model = Self::try_initialize_model(&cache_dir)?;
 
-            // Try to initialize the model with better error handling
-            match Self::try_initialize_model(&cache_dir) {
-                Ok(model) => {
-                    info!("✅ Successfully loaded all-MiniLM-L6-v2 model");
-                    info!("🔄 Warming up model...");
+                info!("✅ Successfully loaded all-MiniLM-L6-v2 model");
+                info!("🔄 Warming up model...");
 
-                    // Warm up the model with a test embedding
-                    let start = std::time::Instant::now();
-                    match model.embed(vec!["test"], None) {
-                        Ok(_) => {
-                            let duration = start.elapsed();
-                            info!(
-                                "✅ Model fully initialized and ready (warm-up took {:?})",
-                                duration
-                            );
+                // Warm up the model with a test embedding
+                let start = std::time::Instant::now();
+                model
+                    .embed(vec!["test"], None)
+                    .map_err(|e| anyhow::anyhow!("Model warm-up failed: {}", e))?;
+                let duration = start.elapsed();
+                info!(
+                    "✅ Model fully initialized and ready (warm-up took {:?})",
+                    duration
+                );
 
-                            // Store the initialized model
-                            if let Ok(mut guard) = self.model.lock() {
-                                *guard = Some(model);
-                            } else {
-                                init_result = Err(anyhow::anyhow!("Failed to acquire model lock"));
-                            }
-                        }
-                        Err(e) => {
-                            init_result = Err(anyhow::anyhow!("Model warm-up failed: {}", e));
-                        }
-                    }
-                }
-                Err(e) => {
-                    init_result = Err(e);
-                }
-            }
-        });
-
-        init_result
+                Ok(model)
+            })
+            .await
     }
 
     /// Try to initialize the FastEmbed model with comprehensive error handling
@@ -161,18 +133,10 @@ impl EmbeddingService {
     /// Generate embeddings for multiple texts
     pub async fn embed_batch(&self, texts: Vec<String>) -> Result<Vec<Vec<f32>>> {
         // Ensure model is initialized
-        self.ensure_initialized()
+        let model = self
+            .ensure_initialized()
+            .await
             .context("Failed to initialize embedding model")?;
-
-        // Get the model from the mutex
-        let model_guard = self
-            .model
-            .lock()
-            .map_err(|_| anyhow::anyhow!("Failed to acquire model lock"))?;
-
-        let model = model_guard
-            .as_ref()
-            .ok_or_else(|| anyhow::anyhow!("Model not initialized"))?;
 
         // Generate embeddings for each text
         let mut all_embeddings = Vec::new();

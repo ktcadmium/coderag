@@ -1,15 +1,64 @@
 # CodeRAG Active Development Context
 
-**Last Updated**: May 26, 2025
-**Current Status**: ✅ PRODUCTION READY WITH ENHANCED AI ASSISTANT AUTONOMY
+**Last Updated**: May 27, 2025
+**Current Status**: ✅ PRODUCTION READY - RACE CONDITION FIXED
 
-## Current Session Focus: AI Assistant Autonomy & Tool Effectiveness
+## Current Session Focus: Concurrent Access Bug Fix
 
-### 🎯 **Major Breakthrough Achieved**
+### 🎯 **Critical Bug Resolved (May 27, 2025)**
 
-**Enhanced MCP Tool Descriptions for AI Assistant Autonomy**: Successfully transformed CodeRAG from a basic documentation tool into a clear, autonomous resource for AI assistants, matching the clarity and guidance of Anthropic's sequential thinking tool.
+**Issue**: "Failed to acquire model lock" errors when multiple MCP tools were called concurrently (e.g., `search_docs` and `crawl_docs` simultaneously).
 
-### 🚀 **Latest Accomplishments (May 26, 2025)**
+**Root Cause**: Race condition in the lazy initialization pattern using `std::sync::Once` + `Arc<Mutex<Option<TextEmbedding>>>`. When multiple threads called `ensure_initialized()` concurrently:
+
+1. `Once::call_once()` ensured only one thread ran initialization
+2. Other threads proceeded to `embed_batch()` and tried to acquire the model lock
+3. If initialization was still running, lock acquisition failed with "Failed to acquire model lock"
+
+**Solution**: Replaced problematic synchronization with `tokio::sync::OnceCell`:
+
+```rust
+// OLD (problematic):
+pub struct EmbeddingService {
+    model: Arc<Mutex<Option<TextEmbedding>>>,
+    init_once: Once,
+}
+
+// NEW (fixed):
+pub struct EmbeddingService {
+    model: OnceCell<TextEmbedding>,
+}
+
+// OLD ensure_initialized pattern had race condition
+fn ensure_initialized(&self) -> Result<()> {
+    self.init_once.call_once(|| {
+        // ... initialization ...
+        if let Ok(mut guard) = self.model.lock() {
+            *guard = Some(model);
+        } else {
+            init_result = Err(anyhow::anyhow!("Failed to acquire model lock"));
+        }
+    });
+}
+
+// NEW pattern eliminates race condition
+async fn ensure_initialized(&self) -> Result<&TextEmbedding> {
+    self.model.get_or_try_init(|| async {
+        // ... initialization ...
+        Ok(model)
+    }).await
+}
+```
+
+**Benefits**:
+
+- ✅ Eliminates race condition completely
+- ✅ Proper async support for concurrent initialization
+- ✅ Cleaner code with better error handling
+- ✅ Maintains lazy loading benefits
+- ✅ All concurrent tool calls now work reliably
+
+### 🚀 **Previous Accomplishments (May 26, 2025)**
 
 1. **✅ Tool Description Enhancement**:
 
