@@ -2,6 +2,7 @@ pub mod crawler;
 pub mod embedding_basic;
 pub mod enhanced_vectordb;
 pub mod mcp;
+pub mod project_manager;
 pub mod vectordb;
 
 // Use the basic embedding service as the default

@@ -430,7 +430,7 @@ mod tests {
 
         for (id, content, url, vector) in docs {
             let doc = create_test_document(id, content, url);
-            storage.add_document(doc, Vector::new(vector)).unwrap();
+            storage.add_document(doc, vector).unwrap();
         }
 
         storage

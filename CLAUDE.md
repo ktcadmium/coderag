@@ -15,6 +15,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 - ✅ **Network Compatibility**: Proper user agent handling for CDN compatibility
 - ✅ **Deployment**: Single binary with automatic model downloading
 - ✅ **AI Optimizations**: Enhanced code extraction, intelligent chunking, content filtering
+- ✅ **Per-Project Databases**: Automatic project detection with isolated `.coderag/` directories
 - ✅ **Production Ready**: All tests passing, compilation successful, MCP server verified
 
 ## Documentation Structure
@@ -107,13 +108,21 @@ fn ensure_initialized(&self) -> Result<()> {
 
 ### Database Architecture ✅
 
-**Stable Storage**: JSON-based vector database with atomic writes.
+**Per-Project Storage**: Automatic project detection with isolated databases.
 
 ```rust
-// Correct pattern for database initialization
-let db_path = data_dir.join("coderag_vectordb.json");
+// Project detection and database routing
+let project_manager = ProjectManager::new(global_data_dir);
+let db_path = project_manager.get_database_path()?;
 let mut vector_db = VectorDatabase::new(&db_path)?;
 ```
+
+**Key Features**:
+- Automatic project detection (looks for `.git`, `package.json`, `Cargo.toml`, etc.)
+- Creates `.coderag/vectordb.json` in project root
+- Automatic `.gitignore` management
+- Falls back to global `~/.coderag/` when not in a project
+- Each project maintains its own isolated documentation set
 
 ### Network Compatibility ✅
 

@@ -1,4 +1,5 @@
 use crate::crawler::{CrawlConfig, CrawlMode, DocumentationFocus};
+use crate::project_manager::{ProjectInfo, ProjectManager};
 use crate::vectordb::{SearchOptions, VectorDatabase};
 use crate::EmbeddingService;
 use rmcp::{model::*, tool, Error as McpError, ServerHandler};
@@ -70,19 +71,44 @@ pub struct SearchResult {
 pub struct CodeRagServer {
     embedding_service: Arc<Mutex<EmbeddingService>>,
     vector_db: Arc<Mutex<VectorDatabase>>,
+    #[allow(dead_code)]
+    project_manager: Arc<ProjectManager>,
+    project_info: Arc<ProjectInfo>,
 }
 
 #[tool(tool_box)]
 impl CodeRagServer {
     pub async fn new(data_dir: PathBuf) -> anyhow::Result<Self> {
         info!("🚀 Initializing CodeRAG server...");
-        info!("📂 Data directory: {:?}", data_dir);
+        info!("📂 Global data directory: {:?}", data_dir);
+
+        // Initialize project manager
+        let project_manager = ProjectManager::new(data_dir);
+        let project_info = project_manager.get_project_info();
+
+        if project_info.is_project {
+            info!(
+                "📁 Detected project: {}",
+                project_info
+                    .project_name
+                    .as_ref()
+                    .unwrap_or(&"unknown".to_string())
+            );
+            info!("📂 Project root: {:?}", project_info.project_root);
+            info!(
+                "💾 Using project-local database: {:?}",
+                project_info.database_path
+            );
+        } else {
+            info!("🌍 No project detected, using global database");
+            info!("💾 Global database path: {:?}", project_info.database_path);
+        }
 
         info!("⏳ Creating embedding service (model downloads on first search)...");
         let embedding_service = EmbeddingService::new().await?;
 
         info!("📊 Initializing vector database...");
-        let db_path = data_dir.join("coderag_vectordb.json");
+        let db_path = project_manager.get_database_path()?;
         let mut vector_db = VectorDatabase::new(&db_path)?;
 
         // Try to load existing data
@@ -96,6 +122,8 @@ impl CodeRagServer {
         Ok(Self {
             embedding_service: Arc::new(Mutex::new(embedding_service)),
             vector_db: Arc::new(Mutex::new(vector_db)),
+            project_manager: Arc::new(project_manager),
+            project_info: Arc::new(project_info),
         })
     }
 
@@ -177,6 +205,11 @@ impl CodeRagServer {
         let response = json!({
             "total_documents": total_documents,
             "sources": summary,
+            "project_context": {
+                "is_project": self.project_info.is_project,
+                "project_name": self.project_info.project_name.clone(),
+                "database_location": self.project_info.database_path.to_string_lossy(),
+            }
         });
 
         let response_json = serde_json::to_string_pretty(&response)
@@ -601,11 +634,13 @@ impl ServerHandler for CodeRagServer {
             },
             instructions: Some(
                 "CodeRAG is YOUR personal documentation knowledge base as an AI coding assistant. \
+                It automatically detects and uses project-specific databases stored in .coderag/ directories. \
                 This tool gives you autonomy to access and expand your knowledge of current programming frameworks, libraries, and APIs. \
                 Use search_docs proactively when you need accurate, up-to-date information for coding assistance. \
                 Use crawl_docs autonomously to index new documentation when you encounter unfamiliar technologies. \
-                Use list_docs to see what's available in your knowledge base. \
+                Use list_docs to see what's available in your knowledge base and current project context. \
                 Use reload_docs to refresh your database. \
+                Each project maintains its own isolated documentation set, ensuring relevant results. \
                 You have full agency to use these tools as needed to provide better coding help - don't wait for permission."
                     .to_string(),
             ),

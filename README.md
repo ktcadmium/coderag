@@ -13,6 +13,7 @@ CodeRAG gives AI coding assistants like Claude instant access to up-to-date docu
 - 📚 **Smart Indexing**: Crawl and index any documentation site
 - 🔄 **Lazy Loading**: AI model downloads automatically on first use
 - 🛡️ **Robust**: Handles network restrictions and sandbox environments
+- 📁 **Per-Project Databases**: Each project maintains its own isolated documentation
 
 ## Installation
 
@@ -156,7 +157,41 @@ Refresh the document database from disk:
 2. **Semantic Understanding**: Uses all-MiniLM-L6-v2 embeddings (384 dimensions) for concept matching
 3. **Fast Search**: Vector similarity search with cosine distance
 4. **MCP Integration**: Standard JSON-RPC communication with Claude Desktop
-5. **Local Storage**: All data stored in `~/.coderag/coderag_vectordb.json`
+5. **Smart Storage**: Project-specific databases in `.coderag/` or global fallback
+
+## Per-Project Databases
+
+CodeRAG automatically detects your project context and maintains isolated documentation databases:
+
+### How It Works
+
+1. **Automatic Detection**: Looks for project markers (`.git`, `package.json`, `Cargo.toml`, etc.)
+2. **Local Storage**: Creates `.coderag/vectordb.json` in your project root
+3. **Automatic Gitignore**: Adds `.coderag/` to your `.gitignore` automatically
+4. **Fallback**: Uses global database (`~/.coderag/`) when not in a project
+
+### Benefits
+
+- **Relevant Results**: Each project only searches its own documentation
+- **Fast Context Switching**: No need to manage databases manually
+- **Clean Repositories**: Vector databases excluded from version control
+- **Efficient Storage**: Only index the docs you actually need per project
+
+### Example
+
+```bash
+# In a Rust project
+cd my-rust-project
+# CodeRAG automatically uses my-rust-project/.coderag/vectordb.json
+
+# In a Node.js project
+cd my-node-project
+# CodeRAG automatically uses my-node-project/.coderag/vectordb.json
+
+# Outside any project
+cd /tmp
+# CodeRAG falls back to ~/.coderag/coderag_vectordb.json
+```
 
 ## Performance
 

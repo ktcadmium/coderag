@@ -41,7 +41,8 @@
       "Bash(RUST_LOG=info timeout 60 ./target/release/coderag-mcp crawl https://httpbin.org/html --verbose 2>&1)",
       "Bash(RUST_LOG=debug timeout 60 ./target/release/coderag-mcp crawl https://docs.python.org/3/library/asyncio.html --verbose 2 >& 1)",
       "Bash(./target/release/coderag-mcp --help)",
-      "Bash(./target/release/coderag-mcp crawl:*)"
+      "Bash(./target/release/coderag-mcp crawl:*)",
+      "Bash(task)"
     ],
     "deny": []
   }

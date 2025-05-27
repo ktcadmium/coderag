@@ -521,7 +521,7 @@ mod tests {
     fn test_deduplication() {
         let text = "This is a test paragraph.\n\nThis is a test paragraph.";
 
-        let mut chunker = EnhancedChunker::default();
+        let mut chunker = EnhancedChunker::new(ChunkingStrategy::default());
 
         let chunks = chunker.chunk_text(text);
 
@@ -533,7 +533,7 @@ mod tests {
     fn test_code_detection() {
         let text = "This is a paragraph.\n\n```rust\nfn main() {\n    println!(\"Hello, world!\");\n}\n```";
 
-        let mut chunker = EnhancedChunker::default();
+        let mut chunker = EnhancedChunker::new(ChunkingStrategy::default());
 
         let chunks = chunker.chunk_text(text);
 
