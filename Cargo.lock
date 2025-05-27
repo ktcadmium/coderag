@@ -479,6 +479,7 @@ dependencies = [
  "jsonrpc-core",
  "jsonrpc-derive",
  "libc",
+ "rand 0.8.5",
  "regex",
  "reqwest",
  "rmcp",
