@@ -14,46 +14,45 @@ CodeRAG gives AI coding assistants like Claude instant access to up-to-date docu
 - 🔄 **Lazy Loading**: AI model downloads automatically on first use
 - 🛡️ **Robust**: Handles network restrictions and sandbox environments
 - 📁 **Per-Project Databases**: Each project maintains its own isolated documentation
+- 🏗️ **Multi-Architecture**: Pre-built binaries for Linux, macOS, and Windows
 
 ## Installation
+
+### Download Pre-Built Binaries (Recommended)
+
+Download the latest release for your platform from [GitHub Releases](https://github.com/ktcadmium/coderag/releases/latest):
+
+| Platform | Architecture | Download |
+|----------|-------------|----------|
+| macOS | Apple Silicon (M1/M2/M3) | `coderag-mcp-macos-arm64.tar.gz` |
+| macOS | Intel | `coderag-mcp-macos-amd64.tar.gz` |
+| macOS | Universal (both) | `coderag-mcp-macos-universal.tar.gz` |
+| Linux | x86_64 | `coderag-mcp-linux-amd64.tar.gz` |
+| Linux | ARM64 | `coderag-mcp-linux-arm64.tar.gz` |
+| Windows | x86_64 | `coderag-mcp-windows-amd64.zip` |
+| Windows | ARM64 | `coderag-mcp-windows-arm64.zip` |
+
+Extract and make executable (macOS/Linux):
+```bash
+tar xzf coderag-mcp-*.tar.gz
+chmod +x coderag-mcp-*
+# Move to a directory in your PATH, e.g.:
+sudo mv coderag-mcp-* /usr/local/bin/coderag-mcp
+```
 
 ### Build from Source
 
 Requirements:
-
 - Rust 1.70 or later
-- 4GB RAM (for embedding models)
 - Internet connection (for initial model download)
 
 ```bash
-git clone https://github.com/ktcadmium/coderag.git
+git clone --recursive https://github.com/ktcadmium/coderag.git
 cd coderag
 cargo build --release --bin coderag-mcp
 ```
 
 The binary will be at `target/release/coderag-mcp`.
-
-### Development Workflow
-
-Use the included Taskfile for common operations:
-
-```bash
-# Install Task runner (if not already installed)
-brew install go-task/tap/go-task  # macOS
-# or: go install github.com/go-task/task/v3/cmd/task@latest
-
-# Quick development check
-task
-
-# Build release binary
-task release
-
-# Test crawling functionality
-task crawl-test
-
-# See all available tasks
-task --list
-```
 
 ## Quick Start
 
@@ -69,7 +68,7 @@ Add CodeRAG to your Claude Desktop configuration:
 {
   "mcpServers": {
     "coderag": {
-      "command": "/path/to/coderag-mcp",
+      "command": "/usr/local/bin/coderag-mcp",
       "args": [],
       "env": {
         "HF_HUB_USER_AGENT_ORIGIN": "CodeRAG/0.1.0"
@@ -86,19 +85,29 @@ Once configured, restart Claude Desktop. CodeRAG will start automatically when C
 **First Use**: The AI model (~90MB) downloads automatically on your first search. This takes 1-2 minutes but only happens once.
 
 Example queries:
-
 - "Search for async error handling in Rust"
 - "Find tokio timeout examples"
 - "Show me how to use MCP tools"
 
+## Per-Project Documentation
+
+CodeRAG automatically maintains separate documentation databases for each project:
+
+- **Automatic Detection**: Recognizes projects by `.git`, `package.json`, `Cargo.toml`, etc.
+- **Local Storage**: Creates `.coderag/vectordb.json` in your project root
+- **Git Integration**: Automatically adds `.coderag/` to `.gitignore`
+- **Global Fallback**: Uses `~/.coderag/` when not in a project
+
+This means:
+- Each project searches only its relevant documentation
+- No manual database switching needed
+- Documentation stays with the project (but not in git)
+- Fast, focused search results
+
 ## Available MCP Tools
 
-CodeRAG provides these tools to AI assistants:
-
 ### `search_docs`
-
 Search indexed documentation with semantic understanding:
-
 ```json
 {
   "query": "async timeout handling",
@@ -109,17 +118,13 @@ Search indexed documentation with semantic understanding:
 ```
 
 ### `list_docs`
-
-See what documentation is indexed:
-
+See what documentation is currently indexed:
 ```json
 {}
 ```
 
 ### `crawl_docs`
-
 Index new documentation sources:
-
 ```json
 {
   "url": "https://docs.rs/tokio/latest/",
@@ -130,67 +135,37 @@ Index new documentation sources:
 ```
 
 **Crawl Modes:**
-
 - `single`: Just the specified page (recommended for MCP)
 - `section`: Page and its direct children
 - `full`: Entire documentation site
 
 **Focus Options:**
-
 - `api`: API reference documentation
 - `examples`: Code examples and tutorials
 - `changelog`: Version history and updates
 - `quickstart`: Getting started guides
 - `all`: No specific focus (recommended)
 
-### `reload_docs`
-
-Refresh the document database from disk:
-
+### `manage_docs`
+Manage your documentation database:
 ```json
-{}
+{
+  "operation": "delete|expire|refresh",
+  "target": "url or source pattern",
+  "max_age_days": 30,
+  "dry_run": true
+}
 ```
 
-## How It Works
+**Operations:**
+- `delete`: Remove specific documentation
+- `expire`: Remove documents older than specified days
+- `refresh`: Re-crawl and update existing documentation
 
-1. **Lazy Initialization**: Model downloads only when first needed, avoiding startup delays
-2. **Semantic Understanding**: Uses all-MiniLM-L6-v2 embeddings (384 dimensions) for concept matching
-3. **Fast Search**: Vector similarity search with cosine distance
-4. **MCP Integration**: Standard JSON-RPC communication with Claude Desktop
-5. **Smart Storage**: Project-specific databases in `.coderag/` or global fallback
-
-## Per-Project Databases
-
-CodeRAG automatically detects your project context and maintains isolated documentation databases:
-
-### How It Works
-
-1. **Automatic Detection**: Looks for project markers (`.git`, `package.json`, `Cargo.toml`, etc.)
-2. **Local Storage**: Creates `.coderag/vectordb.json` in your project root
-3. **Automatic Gitignore**: Adds `.coderag/` to your `.gitignore` automatically
-4. **Fallback**: Uses global database (`~/.coderag/`) when not in a project
-
-### Benefits
-
-- **Relevant Results**: Each project only searches its own documentation
-- **Fast Context Switching**: No need to manage databases manually
-- **Clean Repositories**: Vector databases excluded from version control
-- **Efficient Storage**: Only index the docs you actually need per project
-
-### Example
-
-```bash
-# In a Rust project
-cd my-rust-project
-# CodeRAG automatically uses my-rust-project/.coderag/vectordb.json
-
-# In a Node.js project
-cd my-node-project
-# CodeRAG automatically uses my-node-project/.coderag/vectordb.json
-
-# Outside any project
-cd /tmp
-# CodeRAG falls back to ~/.coderag/coderag_vectordb.json
+### `reload_docs`
+Refresh the document database from disk:
+```json
+{}
 ```
 
 ## Performance
@@ -201,67 +176,62 @@ cd /tmp
 - **Startup Time**: Instant (model loads on first search)
 - **Memory Usage**: ~200MB base + document storage
 
-## Troubleshooting
+## Development
 
-### ONNX Schema Warnings
-
-You may see ONNX schema warnings during model loading - these are harmless and don't affect functionality.
-
-### Network Issues
-
-If model download fails:
-
-1. Check your internet connection
-2. Try running the crawler directly: `./coderag-mcp crawl https://httpbin.org --verbose`
-3. Ensure the `HF_HUB_USER_AGENT_ORIGIN` environment variable is set
-
-### Debug Mode
-
-Run with debug logging to see detailed operation:
+Use the included Taskfile for common operations:
 
 ```bash
-./coderag-mcp --debug
+# Install Task runner (if not already installed)
+brew install go-task/tap/go-task  # macOS
+# or: go install github.com/go-task/task/v3/cmd/task@latest
+
+# Quick development check
+task
+
+# Build release binary
+task release
+
+# Build for all platforms
+task release-all
+
+# See all available tasks
+task --list
 ```
 
-### Data Location
+## Troubleshooting
 
-CodeRAG stores data in `~/.coderag/` by default. You can change this with `--data-dir`.
+### Model Download Issues
+If the model download fails:
+1. Check your internet connection
+2. Ensure `HF_HUB_USER_AGENT_ORIGIN` is set in your config
+3. Try running directly: `HF_HUB_USER_AGENT_ORIGIN=CodeRAG/0.1.0 coderag-mcp --debug`
+
+### Debug Mode
+Run with debug logging to see detailed operation:
+```bash
+coderag-mcp --debug
+```
+
+### ONNX Schema Warnings
+You may see ONNX schema warnings during model loading - these are harmless and don't affect functionality.
 
 ## Architecture
 
 ### Embedding Strategy
-
 - **Model**: all-MiniLM-L6-v2 (384-dimensional vectors)
 - **Provider**: FastEmbed with ONNX Runtime
 - **Initialization**: Lazy loading on first search request
 
 ### Storage
-
 - **Format**: JSON-based vector database
-- **Location**: `~/.coderag/coderag_vectordb.json`
+- **Per-Project**: `.coderag/vectordb.json` in project directories
+- **Global Fallback**: `~/.coderag/coderag_vectordb.json`
 - **Persistence**: Atomic writes with temp file + rename
 
 ### MCP Integration
-
 - **Protocol**: JSON-RPC over stdio
 - **Transport**: Standard MCP stdio transport
 - **Error Handling**: Proper MCP error codes and messages
-
-## Current Status
-
-✅ **Stable Features:**
-
-- Semantic search with fast embeddings
-- MCP server with Claude Desktop integration
-- Single-page documentation crawling
-- Lazy model initialization
-- Robust error handling and network compatibility
-
-🚧 **In Development:**
-
-- Multi-page crawling in MCP context
-- Web UI for management
-- Additional embedding models
 
 ## Contributing
 

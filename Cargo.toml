@@ -1,7 +1,7 @@
 [package]
 name = "coderag"
 version = "0.1.0"
-edition = "2025"
+edition = "2021"
 description = "Documentation RAG for AI-Assisted Development"
 authors = ["Ken Trenkelbach <ken.trenkelbach@gocadmium.com>"]
 license = "MIT"
