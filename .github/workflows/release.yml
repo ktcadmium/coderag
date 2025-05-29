@@ -73,17 +73,19 @@ jobs:
             name: coderag-mcp-macos-arm64
             cargo_flags: ""
 
-          # Windows x86_64
-          - target: x86_64-pc-windows-msvc
-            os: windows-latest
-            name: coderag-mcp-windows-amd64.exe
-            cargo_flags: ""
+          # Windows builds disabled due to esaxx-rs/ONNX Runtime linking issue
+          # See: https://github.com/Anush008/fastembed-rs/issues
+          # # Windows x86_64
+          # - target: x86_64-pc-windows-msvc
+          #   os: windows-latest
+          #   name: coderag-mcp-windows-amd64.exe
+          #   cargo_flags: ""
 
-          # Windows ARM64
-          - target: aarch64-pc-windows-msvc
-            os: windows-latest
-            name: coderag-mcp-windows-arm64.exe
-            cargo_flags: ""
+          # # Windows ARM64
+          # - target: aarch64-pc-windows-msvc
+          #   os: windows-latest
+          #   name: coderag-mcp-windows-arm64.exe
+          #   cargo_flags: ""
 
     runs-on: ${{ matrix.os }}
 
@@ -106,6 +108,12 @@ jobs:
         with:
           target: ${{ matrix.target }}
 
+      - name: Install OpenSSL for ARM64 cross-compilation
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libssl-dev:arm64
+
       - name: Cache cargo registry
         uses: actions/cache@v3
         with:
@@ -127,6 +135,8 @@ jobs:
       - name: Build binary
         run: |
           cargo build --release --bin coderag-mcp --target ${{ matrix.target }} ${{ matrix.cargo_flags }}
+        env:
+          RUSTFLAGS: ${{ matrix.rust_flags || env.RUSTFLAGS }}
 
       - name: Strip binary (Linux/macOS)
         if: matrix.os != 'windows-latest'

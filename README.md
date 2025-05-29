@@ -29,8 +29,10 @@ Download the latest release for your platform from [GitHub Releases](https://git
 | macOS | Universal (both) | `coderag-mcp-macos-universal.tar.gz` |
 | Linux | x86_64 | `coderag-mcp-linux-amd64.tar.gz` |
 | Linux | ARM64 | `coderag-mcp-linux-arm64.tar.gz` |
-| Windows | x86_64 | `coderag-mcp-windows-amd64.zip` |
-| Windows | ARM64 | `coderag-mcp-windows-arm64.zip` |
+| Windows* | x86_64 | Coming soon |
+| Windows* | ARM64 | Coming soon |
+
+*Windows builds are temporarily unavailable due to a linking issue with the embedding library. Track progress at [#1](https://github.com/ktcadmium/coderag/issues/1).
 
 Extract and make executable (macOS/Linux):
 ```bash
