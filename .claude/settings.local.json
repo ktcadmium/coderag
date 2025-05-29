@@ -47,7 +47,8 @@
       "Bash(gh run view:*)",
       "Bash(gh run download:*)",
       "Bash(cp:*)",
-      "Bash(tar:*)"
+      "Bash(tar:*)",
+      "Bash(gh run list:*)"
     ],
     "deny": []
   },

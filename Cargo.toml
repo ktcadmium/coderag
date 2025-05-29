@@ -74,9 +74,6 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 shellexpand = "3.1"                                # For expanding ~ in paths
 
-# Add signal handling for graceful shutdown
-signal-hook = "0.3"
-signal-hook-tokio = { version = "0.3", features = ["futures-v0_3"] }
 thiserror = "1.0"
 
 # Tokenizers and model loading
