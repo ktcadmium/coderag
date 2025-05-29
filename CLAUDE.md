@@ -4,19 +4,21 @@ This file provides guidance to Claude Code (claude.ai/code) when working with th
 
 ## Project Status Overview
 
-**CodeRAG is a complete, stable documentation RAG system.** All core functionality is implemented, tested, and working reliably in production environments including Claude Desktop.
+**CodeRAG v0.1.0 is released!** This is a complete, stable documentation RAG system with multi-architecture binary releases available. All core functionality is implemented, tested, and working reliably in production environments including Claude Desktop.
 
-### Current State
+### Current State (v0.1.0 - May 29, 2025)
 
 - ✅ **Core System**: Semantic search, vector database, web crawler all working
 - ✅ **MCP Protocol**: Full implementation with robust error handling
 - ✅ **Performance**: All targets exceeded (2-5ms embeddings, <10ms search)
 - ✅ **Claude Desktop Integration**: Successfully resolved through lazy initialization
-- ✅ **Network Compatibility**: Proper user agent handling for CDN compatibility
+- ✅ **Network Compatibility**: Built-in HF_HUB_USER_AGENT_ORIGIN - no config needed
 - ✅ **Deployment**: Single binary with automatic model downloading
 - ✅ **AI Optimizations**: Enhanced code extraction, intelligent chunking, content filtering
 - ✅ **Per-Project Databases**: Automatic project detection with isolated `.coderag/` directories
-- ✅ **Production Ready**: All tests passing, compilation successful, MCP server verified
+- ✅ **Multi-Architecture Release**: Linux (x64/ARM64), macOS (Intel/ARM64/Universal)
+- ✅ **Simplified Installation**: Download binary and run - no environment setup needed
+- ⚠️ **Windows Support**: Temporarily disabled due to esaxx-rs/ONNX Runtime linking issues
 
 ## Documentation Structure
 
@@ -132,11 +134,29 @@ let mut vector_db = VectorDatabase::new(&db_path)?;
 export HF_HUB_USER_AGENT_ORIGIN="CodeRAG/0.1.0"
 ```
 
+## Release Process
+
+### v0.1.0 Release (May 29, 2025)
+
+The release process is fully automated through GitHub Actions:
+
+1. **Tag and Push**: `git tag v0.1.0 && git push origin v0.1.0`
+2. **Automated Build**: GitHub Actions builds for all platforms
+3. **Binary Artifacts**: Both archives (.tar.gz) and raw binaries are uploaded
+4. **Checksums**: SHA256 checksums generated for all artifacts
+
+**Key Improvements Made**:
+- Fixed submodule initialization in workflows
+- Added LICENSE file for packaging
+- Removed unused signal-hook dependencies (Windows compatibility)
+- Built-in HF_HUB_USER_AGENT_ORIGIN (no user config needed)
+- Disabled Windows builds temporarily (upstream dependency issue)
+
 ## Quick Development Reference
 
 ### Current Branch
 
-`main` - Stable, production-ready implementation
+`main` - Stable, production-ready implementation (v0.1.0)
 
 ### Key Commands
 
@@ -256,6 +276,14 @@ The memory-bank files provide complete project context and are automatically inc
 
 ## Key Technical Learnings
 
+### v0.1.0 Release Learnings
+
+1. **GitHub Actions**: Submodules require `submodules: recursive` in checkout step
+2. **Windows Build Issue**: esaxx-rs static runtime conflicts with ONNX dynamic runtime
+3. **Binary Distribution**: Users prefer raw binaries for automated installation
+4. **Environment Variables**: Better to set in code than require user configuration
+5. **Release Artifacts**: Provide both archives and raw binaries for flexibility
+
 ### MCP Server Behavior
 
 1. **Startup Sandbox**: MCP servers run in restricted environments during initialization
@@ -265,8 +293,8 @@ The memory-bank files provide complete project context and are automatically inc
 
 ### Network Compatibility
 
-1. **User Agent Importance**: CDNs reject requests with generic/missing user agents
-2. **Environment Variables**: Standard way to configure network behavior
+1. **User Agent Solution**: Built-in `HF_HUB_USER_AGENT_ORIGIN` prevents CDN blocking
+2. **No Configuration Needed**: Users can just download and run
 3. **Retry Logic**: Handle transient network failures gracefully
 
 ### Performance Optimization

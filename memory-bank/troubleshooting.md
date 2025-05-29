@@ -262,3 +262,19 @@ This experience validates the importance of persistent technical memory:
 ---
 
 **Status**: All technical issues resolved. CodeRAG is production-ready with robust error handling, performance optimization, and comprehensive documentation.
+
+## Known Issues
+
+### Windows Build Issue (Temporary)
+
+**Problem**: Windows builds disabled in v0.1.0 release due to esaxx-rs dependency issues with ONNX Runtime.
+
+**Root Cause**: The esaxx-rs crate has linking issues with ONNX Runtime on Windows platforms.
+
+**Impact**: Windows users cannot use pre-built binaries in v0.1.0.
+
+**Workaround**:
+- Use WSL2 with Linux binary
+- Build from source on Windows (may require manual ONNX Runtime configuration)
+
+**Resolution**: Tracking upstream fix in esaxx-rs repository.

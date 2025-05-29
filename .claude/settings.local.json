@@ -48,7 +48,8 @@
       "Bash(gh run download:*)",
       "Bash(cp:*)",
       "Bash(tar:*)",
-      "Bash(gh run list:*)"
+      "Bash(gh run list:*)",
+      "Bash(git rev-parse:*)"
     ],
     "deny": []
   },

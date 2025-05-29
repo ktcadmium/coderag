@@ -1,10 +1,40 @@
 # CodeRAG Active Development Context
 
-**Last Updated**: May 27, 2025
-**Current Status**: ✅ PRODUCTION READY - PER-PROJECT DATABASES IMPLEMENTED
-**Current Branch**: `feature/vectordb-improvements` (commit: 181599b)
+**Last Updated**: May 29, 2025
+**Current Status**: ✅ v0.1.0 RELEASED - PRODUCTION READY
+**Current Branch**: `main`
+**Current Commit**: `02a5126`
+**Release**: v0.1.0 - Multi-architecture binaries available
 
-## Current Session Focus: Vector Search Optimizations & Per-Project Databases
+## Current Release: v0.1.0 - Production Ready
+
+### 🎉 **v0.1.0 Release Completed (May 29, 2025)**
+
+**Achievement**: Successfully released CodeRAG v0.1.0 with multi-architecture support.
+
+**Release Highlights**:
+1. **Multi-Architecture Binaries**:
+   - Linux x64 and ARM64
+   - macOS Intel, ARM64, and Universal binary
+   - Windows builds temporarily disabled (esaxx-rs/ONNX Runtime linking issues)
+
+2. **Simplified Installation**:
+   - Single binary download - no configuration needed
+   - Built-in HF_HUB_USER_AGENT_ORIGIN environment variable
+   - Automatic model downloading on first use
+   - Both archive (.tar.gz) and raw binary releases available
+
+3. **Production Features**:
+   - Per-project vector databases (`.coderag/` directories)
+   - Lazy model initialization for Claude Desktop compatibility
+   - All performance targets exceeded
+   - Comprehensive test suite passing
+
+4. **Known Issues**:
+   - Windows builds disabled due to esaxx-rs dependency issues with ONNX Runtime
+   - Tracking upstream fix for Windows support
+
+## Previous Session Focus: Vector Search Optimizations & Per-Project Databases
 
 ### 🎯 **Vector Search Optimizations Completed (May 27, 2025)**
 

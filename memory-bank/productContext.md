@@ -24,10 +24,10 @@ CodeRAG solves this by providing semantic search over curated documentation, ena
 4. Can verify API usage and best practices in real-time
 
 ### For Development Teams
-1. Install single binary
-2. Configure Claude Desktop with MCP settings
-3. Optionally crawl documentation sources
-4. AI assistant automatically uses CodeRAG during coding
+1. Download single binary for your platform (Linux/macOS)
+2. Run `coderag-mcp` - no configuration needed
+3. AI assistant automatically uses CodeRAG during coding
+4. Per-project databases created automatically in `.coderag/`
 
 ## User Experience Goals
 - **Zero Configuration**: Works out of the box with sensible defaults
@@ -43,5 +43,8 @@ CodeRAG solves this by providing semantic search over curated documentation, ena
 ## Key Differentiators
 - **Purpose-Built for AI**: Optimized for how AI assistants query documentation
 - **Single Binary**: No Docker, no Ollama, no complex setup
+- **Zero Configuration**: Built-in environment variables, automatic setup
+- **Multi-Architecture**: Native binaries for Linux x64/ARM64, macOS Intel/Apple Silicon
+- **Per-Project Isolation**: Automatic project detection and isolated databases
 - **Programming-Focused**: Embeddings and search tuned for code documentation
 - **MCP Native**: First-class integration with Claude Desktop

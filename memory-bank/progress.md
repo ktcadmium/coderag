@@ -1,11 +1,38 @@
 # CodeRAG Development Progress
 
-## Current Status: ✅ STABLE PRODUCTION RELEASE - PER-PROJECT DATABASES + VECTOR OPTIMIZATIONS
+## Current Status: ✅ v0.1.0 RELEASED - PRODUCTION READY
 
-**Date**: May 27, 2025
-**Major Achievement**: Complete, AI-optimized documentation RAG system with per-project database isolation, advanced vector search optimizations, and enhanced AI assistant autonomy
+**Date**: May 29, 2025
+**Major Achievement**: Complete, AI-optimized documentation RAG system with v0.1.0 multi-architecture release
 
 ## Latest Developments
+
+### 🎉 **v0.1.0 Release (May 29, 2025)**
+
+**Major Achievement**: Successfully released CodeRAG v0.1.0 with multi-architecture support.
+
+**Release Features**:
+1. **✅ Multi-Architecture Binaries**:
+   - Linux x64 and ARM64 builds
+   - macOS Intel, ARM64, and Universal binary
+   - Windows builds temporarily disabled (esaxx-rs/ONNX Runtime issues)
+
+2. **✅ Zero Configuration**:
+   - Single binary download and run
+   - Built-in HF_HUB_USER_AGENT_ORIGIN environment variable
+   - No manual setup required
+   - Automatic model downloading on first use
+
+3. **✅ Release Formats**:
+   - Archive releases (.tar.gz) for easy extraction
+   - Raw binary releases for direct download
+   - GitHub Actions automated release pipeline
+
+4. **✅ Production Features**:
+   - Per-project vector databases in `.coderag/` directories
+   - Lazy model initialization for Claude Desktop
+   - All performance targets exceeded
+   - Comprehensive test suite
 
 ### 🎯 **Per-Project Database Isolation (LATEST - May 27, 2025)**
 

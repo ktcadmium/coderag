@@ -204,7 +204,7 @@ pub async fn hybrid_search(&self, query: &str) -> Vec<SearchResult>
 - **Code Awareness**: Preserve complete functions/classes
 - **Hierarchical**: Multi-level chunks for different granularities
 
-### Per-Project Database Architecture (PLANNED)
+### Per-Project Database Architecture (IMPLEMENTED)
 
 #### Design Goals
 1. **Isolation**: Each project gets its own vector space
@@ -228,13 +228,19 @@ pub async fn get_project_db(&self, context: &Context) -> &VectorDatabase
 
 #### Binary Size
 - **Debug Build**: ~150MB (includes symbols)
-- **Release Build**: ~40MB (stripped)
+- **Release Build**: ~15MB (stripped, optimized)
 - **With Models**: +384MB (downloaded on first run)
 
 #### Platform Support
-- **macOS**: Full support (primary development)
-- **Linux**: Full support (tested on Ubuntu)
-- **Windows**: Should work, needs testing
+- **macOS**: Full support (Intel, Apple Silicon, Universal binary)
+- **Linux**: Full support (x64, ARM64)
+- **Windows**: Temporarily disabled (esaxx-rs/ONNX Runtime linking issues)
+
+#### Built-in Configuration
+- **HF_HUB_USER_AGENT_ORIGIN**: Built into binary, no manual setup needed
+- **Model Downloads**: Automatic on first use
+- **Project Detection**: Automatic with `.git`, `package.json`, `Cargo.toml`
+- **Database Location**: `.coderag/` in project root or `~/.coderag/` globally
 
 #### Resource Requirements
 - **CPU**: Any x86_64 or ARM64
