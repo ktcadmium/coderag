@@ -26,7 +26,7 @@ Requirements:
 - Internet connection (for initial model download)
 
 ```bash
-git clone https://github.com/yourusername/coderag.git
+git clone https://github.com/ktcadmium/coderag.git
 cd coderag
 cargo build --release --bin coderag-mcp
 ```
