@@ -1,0 +1,235 @@
+name: Multi-Architecture Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Tag name for release'
+        required: false
+        default: 'v0.1.0'
+
+env:
+  CARGO_TERM_COLOR: always
+  HF_HUB_USER_AGENT_ORIGIN: "CodeRAG/0.1.0"
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+    steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}
+          release_name: Release ${{ github.event.inputs.tag_name || github.ref_name }}
+          draft: false
+          prerelease: false
+
+  build-release:
+    name: Build Release
+    needs: create-release
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # Linux x86_64
+          - target: x86_64-unknown-linux-gnu
+            os: ubuntu-latest
+            name: coderag-mcp-linux-amd64
+            cargo_flags: ""
+
+          # Linux aarch64
+          - target: aarch64-unknown-linux-gnu
+            os: ubuntu-latest
+            name: coderag-mcp-linux-arm64
+            cargo_flags: ""
+            use_cross: true
+
+          # macOS x86_64
+          - target: x86_64-apple-darwin
+            os: macos-latest
+            name: coderag-mcp-macos-amd64
+            cargo_flags: ""
+
+          # macOS Apple Silicon
+          - target: aarch64-apple-darwin
+            os: macos-latest
+            name: coderag-mcp-macos-arm64
+            cargo_flags: ""
+
+          # Windows x86_64
+          - target: x86_64-pc-windows-msvc
+            os: windows-latest
+            name: coderag-mcp-windows-amd64.exe
+            cargo_flags: ""
+
+          # Windows ARM64
+          - target: aarch64-pc-windows-msvc
+            os: windows-latest
+            name: coderag-mcp-windows-arm64.exe
+            cargo_flags: ""
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+          override: true
+
+      - name: Install cross-compilation tools
+        if: matrix.use_cross
+        uses: taiki-e/setup-cross-toolchain-action@v1
+        with:
+          target: ${{ matrix.target }}
+
+      - name: Cache cargo registry
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/registry
+          key: ${{ matrix.target }}-cargo-registry-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo index
+        uses: actions/cache@v3
+        with:
+          path: ~/.cargo/git
+          key: ${{ matrix.target }}-cargo-index-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Cache cargo build
+        uses: actions/cache@v3
+        with:
+          path: target
+          key: ${{ matrix.target }}-cargo-build-target-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Build binary
+        run: |
+          cargo build --release --bin coderag-mcp --target ${{ matrix.target }} ${{ matrix.cargo_flags }}
+
+      - name: Strip binary (Linux/macOS)
+        if: matrix.os != 'windows-latest'
+        run: |
+          strip target/${{ matrix.target }}/release/coderag-mcp || true
+
+      - name: Create archive (Linux/macOS)
+        if: matrix.os != 'windows-latest'
+        run: |
+          cp target/${{ matrix.target }}/release/coderag-mcp ./${{ matrix.name }}
+          tar czf ${{ matrix.name }}.tar.gz ${{ matrix.name }} README.md LICENSE
+
+      - name: Create archive (Windows)
+        if: matrix.os == 'windows-latest'
+        shell: pwsh
+        run: |
+          Copy-Item "target/${{ matrix.target }}/release/coderag-mcp.exe" "./${{ matrix.name }}"
+          Compress-Archive -Path "./${{ matrix.name }}", "README.md", "LICENSE" -DestinationPath "${{ matrix.name }}.zip"
+
+      - name: Upload Release Asset (tar.gz)
+        if: matrix.os != 'windows-latest'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./${{ matrix.name }}.tar.gz
+          asset_name: ${{ matrix.name }}.tar.gz
+          asset_content_type: application/gzip
+
+      - name: Upload Release Asset (zip)
+        if: matrix.os == 'windows-latest'
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./${{ matrix.name }}.zip
+          asset_name: ${{ matrix.name }}.zip
+          asset_content_type: application/zip
+
+  build-universal-macos:
+    name: Build Universal macOS Binary
+    needs: create-release
+    runs-on: macos-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+          target: x86_64-apple-darwin
+          override: true
+
+      - name: Add ARM64 target
+        run: rustup target add aarch64-apple-darwin
+
+      - name: Build x86_64
+        run: cargo build --release --bin coderag-mcp --target x86_64-apple-darwin
+
+      - name: Build ARM64
+        run: cargo build --release --bin coderag-mcp --target aarch64-apple-darwin
+
+      - name: Create universal binary
+        run: |
+          lipo -create -output coderag-mcp-macos-universal \
+            target/x86_64-apple-darwin/release/coderag-mcp \
+            target/aarch64-apple-darwin/release/coderag-mcp
+          chmod +x coderag-mcp-macos-universal
+
+      - name: Create archive
+        run: |
+          tar czf coderag-mcp-macos-universal.tar.gz coderag-mcp-macos-universal README.md LICENSE
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./coderag-mcp-macos-universal.tar.gz
+          asset_name: coderag-mcp-macos-universal.tar.gz
+          asset_content_type: application/gzip
+
+  update-checksums:
+    name: Update Checksums
+    needs: [build-release, build-universal-macos]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Generate checksums
+        run: |
+          echo "# SHA256 Checksums" > checksums.txt
+          echo "" >> checksums.txt
+          find . -name "*.tar.gz" -o -name "*.zip" | while read f; do
+            sha256sum "$f" >> checksums.txt
+          done
+
+      - name: Upload checksums
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./checksums.txt
+          asset_name: checksums.txt
+          asset_content_type: text/plain

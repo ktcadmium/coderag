@@ -42,7 +42,8 @@
       "Bash(RUST_LOG=debug timeout 60 ./target/release/coderag-mcp crawl https://docs.python.org/3/library/asyncio.html --verbose 2 >& 1)",
       "Bash(./target/release/coderag-mcp --help)",
       "Bash(./target/release/coderag-mcp crawl:*)",
-      "Bash(task)"
+      "Bash(task)",
+      "Bash(/opt/homebrew/bin/rustup target list --installed)"
     ],
     "deny": []
   },
