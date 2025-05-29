@@ -45,5 +45,16 @@
       "Bash(task)"
     ],
     "deny": []
-  }
+  },
+  "enableAllProjectMcpServers": false,
+  "enabledMcpjsonServers": [
+    "sequentialthinking",
+    "coderag"
+  ],
+  "disabledMcpjsonServers": [
+    "kubernetes",
+    "desktop-commander",
+    "jira",
+    "gitlab"
+  ]
 }
