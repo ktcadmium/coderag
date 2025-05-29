@@ -43,7 +43,11 @@
       "Bash(./target/release/coderag-mcp --help)",
       "Bash(./target/release/coderag-mcp crawl:*)",
       "Bash(task)",
-      "Bash(/opt/homebrew/bin/rustup target list --installed)"
+      "Bash(/opt/homebrew/bin/rustup target list --installed)",
+      "Bash(gh run view:*)",
+      "Bash(gh run download:*)",
+      "Bash(cp:*)",
+      "Bash(tar:*)"
     ],
     "deny": []
   },
