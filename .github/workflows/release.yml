@@ -13,7 +13,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  HF_HUB_USER_AGENT_ORIGIN: "CodeRAG/0.1.0"
 
 jobs:
   create-release:
@@ -156,19 +155,23 @@ jobs:
           Copy-Item "target/${{ matrix.target }}/release/coderag-mcp.exe" "./${{ matrix.name }}"
           Compress-Archive -Path "./${{ matrix.name }}", "README.md", "LICENSE" -DestinationPath "${{ matrix.name }}.zip"
 
-      - name: Upload Release Asset (tar.gz)
+      - name: Upload Release Assets (tar.gz and raw binary)
         if: matrix.os != 'windows-latest'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}
-          files: ./${{ matrix.name }}.tar.gz
+          files: |
+            ./${{ matrix.name }}.tar.gz
+            ./${{ matrix.name }}
 
-      - name: Upload Release Asset (zip)
+      - name: Upload Release Assets (zip and raw binary)
         if: matrix.os == 'windows-latest'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}
-          files: ./${{ matrix.name }}.zip
+          files: |
+            ./${{ matrix.name }}.zip
+            ./${{ matrix.name }}
 
   build-universal-macos:
     name: Build Universal macOS Binary
@@ -210,11 +213,13 @@ jobs:
         run: |
           tar czf coderag-mcp-macos-universal.tar.gz coderag-mcp-macos-universal README.md LICENSE
 
-      - name: Upload Release Asset
+      - name: Upload Release Assets
         uses: softprops/action-gh-release@v1
         with:
           tag_name: ${{ github.event.inputs.tag_name || github.ref_name }}
-          files: ./coderag-mcp-macos-universal.tar.gz
+          files: |
+            ./coderag-mcp-macos-universal.tar.gz
+            ./coderag-mcp-macos-universal
 
   update-checksums:
     name: Update Checksums
@@ -236,7 +241,13 @@ jobs:
         run: |
           echo "# SHA256 Checksums" > checksums.txt
           echo "" >> checksums.txt
-          find . -name "*.tar.gz" -o -name "*.zip" | while read f; do
+          echo "## Archives" >> checksums.txt
+          find . -name "*.tar.gz" -o -name "*.zip" | sort | while read f; do
+            sha256sum "$f" >> checksums.txt
+          done
+          echo "" >> checksums.txt
+          echo "## Raw Binaries" >> checksums.txt
+          find . -name "coderag-mcp-*" -type f ! -name "*.tar.gz" ! -name "*.zip" | sort | while read f; do
             sha256sum "$f" >> checksums.txt
           done
 

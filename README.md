@@ -22,24 +22,33 @@ CodeRAG gives AI coding assistants like Claude instant access to up-to-date docu
 
 Download the latest release for your platform from [GitHub Releases](https://github.com/ktcadmium/coderag/releases/latest):
 
-| Platform | Architecture | Download |
-|----------|-------------|----------|
-| macOS | Apple Silicon (M1/M2/M3) | `coderag-mcp-macos-arm64.tar.gz` |
-| macOS | Intel | `coderag-mcp-macos-amd64.tar.gz` |
-| macOS | Universal (both) | `coderag-mcp-macos-universal.tar.gz` |
-| Linux | x86_64 | `coderag-mcp-linux-amd64.tar.gz` |
-| Linux | ARM64 | `coderag-mcp-linux-arm64.tar.gz` |
-| Windows* | x86_64 | Coming soon |
-| Windows* | ARM64 | Coming soon |
+| Platform | Architecture | Archive | Raw Binary |
+|----------|-------------|---------|------------|
+| macOS | Apple Silicon (M1/M2/M3) | `coderag-mcp-macos-arm64.tar.gz` | `coderag-mcp-macos-arm64` |
+| macOS | Intel | `coderag-mcp-macos-amd64.tar.gz` | `coderag-mcp-macos-amd64` |
+| macOS | Universal | `coderag-mcp-macos-universal.tar.gz` | `coderag-mcp-macos-universal` |
+| Linux | x86_64 | `coderag-mcp-linux-amd64.tar.gz` | `coderag-mcp-linux-amd64` |
+| Linux | ARM64 | `coderag-mcp-linux-arm64.tar.gz` | `coderag-mcp-linux-arm64` |
+| Windows* | x86_64 | Coming soon | Coming soon |
+| Windows* | ARM64 | Coming soon | Coming soon |
 
 *Windows builds are temporarily unavailable due to a linking issue with the embedding library. Track progress at [#1](https://github.com/ktcadmium/coderag/issues/1).
 
-Extract and make executable (macOS/Linux):
+**Archives** include README and LICENSE files. **Raw binaries** are just the executable - perfect for automated installs.
+
+#### Using Archive (includes docs):
 ```bash
 tar xzf coderag-mcp-*.tar.gz
 chmod +x coderag-mcp-*
-# Move to a directory in your PATH, e.g.:
 sudo mv coderag-mcp-* /usr/local/bin/coderag-mcp
+```
+
+#### Using Raw Binary (quick install):
+```bash
+# Download directly to /usr/local/bin (example for macOS ARM64)
+sudo curl -L https://github.com/ktcadmium/coderag/releases/latest/download/coderag-mcp-macos-arm64 \
+  -o /usr/local/bin/coderag-mcp
+sudo chmod +x /usr/local/bin/coderag-mcp
 ```
 
 ### Build from Source
@@ -71,10 +80,7 @@ Add CodeRAG to your Claude Desktop configuration:
   "mcpServers": {
     "coderag": {
       "command": "/usr/local/bin/coderag-mcp",
-      "args": [],
-      "env": {
-        "HF_HUB_USER_AGENT_ORIGIN": "CodeRAG/0.1.0"
-      }
+      "args": []
     }
   }
 }
@@ -205,8 +211,8 @@ task --list
 ### Model Download Issues
 If the model download fails:
 1. Check your internet connection
-2. Ensure `HF_HUB_USER_AGENT_ORIGIN` is set in your config
-3. Try running directly: `HF_HUB_USER_AGENT_ORIGIN=CodeRAG/0.1.0 coderag-mcp --debug`
+2. Try running with debug logging: `coderag-mcp --debug`
+3. Check for firewall or proxy issues blocking Hugging Face CDN
 
 ### Debug Mode
 Run with debug logging to see detailed operation:

@@ -61,6 +61,9 @@ extern "C" fn force_exit() {
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    // Set HuggingFace user agent to prevent CDN blocking
+    std::env::set_var("HF_HUB_USER_AGENT_ORIGIN", "CodeRAG/0.1.0");
+
     // Register our exit handler to run before ONNX cleanup
     unsafe {
         libc::atexit(force_exit);

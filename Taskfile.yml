@@ -4,8 +4,7 @@ vars:
   BINARY_NAME: coderag-mcp
   RELEASE_DIR: target/release
 
-env:
-  HF_HUB_USER_AGENT_ORIGIN: "CodeRAG/0.1.0"
+# Environment variable now set automatically in the code
 
 tasks:
   build:
