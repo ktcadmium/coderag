@@ -1,38 +1,38 @@
 # CodeRAG Active Development Context
 
-**Last Updated**: May 29, 2025
-**Current Status**: ✅ v0.1.0 RELEASED - PRODUCTION READY
-**Current Branch**: `main`
-**Current Commit**: `02a5126`
-**Release**: v0.1.0 - Multi-architecture binaries available
+**Last Updated**: May 30, 2025
+**Current Status**: ✅ PRODUCTION READY - DEBUG LOGGING CLEANED UP
 
-## Current Release: v0.1.0 - Production Ready
+## Current Session Focus: Debug Logging Cleanup & Production Readiness
 
-### 🎉 **v0.1.0 Release Completed (May 29, 2025)**
+### 🎯 **Production Cleanup Completed (May 30, 2025)**
 
-**Achievement**: Successfully released CodeRAG v0.1.0 with multi-architecture support.
+**Issue**: Excessive debug logging was creating too much noise in production environments, making it difficult to identify actual issues and overwhelming log files.
 
-**Release Highlights**:
-1. **Multi-Architecture Binaries**:
-   - Linux x64 and ARM64
-   - macOS Intel, ARM64, and Universal binary
-   - Windows builds temporarily disabled (esaxx-rs/ONNX Runtime linking issues)
+**Root Cause**: Debug logging was added during development for troubleshooting but never cleaned up:
 
-2. **Simplified Installation**:
-   - Single binary download - no configuration needed
-   - Built-in HF_HUB_USER_AGENT_ORIGIN environment variable
-   - Automatic model downloading on first use
-   - Both archive (.tar.gz) and raw binary releases available
+1. File-based logging setup with `tracing-appender` in `src/bin/mcp-server.rs`
+2. Excessive emoji-laden debug statements throughout `src/mcp/sdk_server.rs`
+3. Unnecessary project path logging in `src/project_manager.rs`
+4. Additional dependency on `tracing-appender` in `Cargo.toml`
+5. Sensitive `.mcp.json` file tracked in git repository
 
-3. **Production Features**:
-   - Per-project vector databases (`.coderag/` directories)
-   - Lazy model initialization for Claude Desktop compatibility
-   - All performance targets exceeded
-   - Comprehensive test suite passing
+**Solution**: Systematic cleanup of debug infrastructure:
 
-4. **Known Issues**:
-   - Windows builds disabled due to esaxx-rs dependency issues with ONNX Runtime
-   - Tracking upstream fix for Windows support
+- **Removed Dependencies**: Eliminated `tracing-appender` from `Cargo.toml`
+- **Simplified Logging**: Restored clean stderr-only logging setup
+- **Cleaned Debug Logs**: Removed all excessive debug statements with emojis and phase announcements
+- **Preserved Essential Info**: Kept only meaningful operational messages
+- **Secured Repository**: Removed `.mcp.json` from git tracking (already in `.gitignore`)
+
+**Benefits**:
+
+- ✅ Clean, professional logging output
+- ✅ Reduced log noise and file sizes
+- ✅ Improved debugging experience
+- ✅ Faster compilation without extra dependencies
+- ✅ Secured sensitive configuration files
+- ✅ Production-ready logging setup
 
 ## Previous Session Focus: Vector Search Optimizations & Per-Project Databases
 
