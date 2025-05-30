@@ -176,6 +176,58 @@ Refresh the document database from disk:
 {}
 ```
 
+## AI Assistant Compatibility
+
+CodeRAG works with multiple AI coding assistants, but the experience varies:
+
+### Cursor IDE ✅ **Full Support**
+- **Autonomous Crawling**: AI assistant can directly use `crawl_docs` to index new documentation
+- **Seamless Integration**: Just ask "Can you index the React documentation?" and it works
+- **Smart Discovery**: AI automatically finds and indexes relevant docs for your questions
+- **No Manual Steps**: Everything happens transparently through the MCP interface
+
+### Claude Code ⚠️ **Search Only**
+- **Search Works Perfectly**: AI assistant can search all indexed documentation
+- **No Autonomous Crawling**: AI cannot directly crawl new documentation sources
+- **Manual Indexing Required**: You must run the binary manually to add new docs:
+
+```bash
+# Example: Manually index React documentation for Claude Code
+./coderag-mcp crawl https://react.dev/reference --mode single --focus all
+
+# Then Claude Code can search the newly indexed docs
+```
+
+### Other MCP Clients
+- **Compatibility**: Any MCP-compatible client should work
+- **Feature Support**: Depends on the client's MCP implementation
+- **Testing Needed**: Please report compatibility issues
+
+### Why the Difference?
+
+The difference comes from how each AI assistant handles MCP tool permissions:
+
+- **Cursor IDE**: Allows AI assistants to call any available MCP tool autonomously
+- **Claude Code**: Currently restricts certain MCP tools, requiring manual execution for crawling
+- **Future**: Claude Code may add full MCP tool support in future updates
+
+### Recommended Workflow
+
+**For Cursor IDE users:**
+```
+1. Ask AI: "Can you search for React useEffect examples?"
+2. AI automatically crawls React docs if not indexed
+3. AI returns relevant examples from fresh documentation
+```
+
+**For Claude Code users:**
+```
+1. Check what's indexed: Ask AI to use list_docs
+2. If needed docs missing: Run ./coderag-mcp crawl [url] manually
+3. Ask AI: "Can you search for React useEffect examples?"
+4. AI returns relevant examples from your pre-indexed documentation
+```
+
 ## Performance
 
 - **Search Speed**: <10ms for typical document collections
